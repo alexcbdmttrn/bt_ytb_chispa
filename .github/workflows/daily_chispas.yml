@@ -1,53 +1,155 @@
-name: Publicar Video Diario - Ciencia Weird
+name: Publicar Video Diario - Chispas Inquietas
 
 on:
   schedule:
-    - cron: '0 12 * * *' # 6:00 AM CDMX
+    # 12:00 UTC = 06:00 AM CDMX. Da margen para generar y programar el video largo a las 18:00 CDMX.
+    - cron: '0 12 * * *'
   workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Ignorar la ventana de 20h y publicar ahora'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chispas-bot
+  cancel-in-progress: false
 
 jobs:
-  publicar-video:
+  publicar:
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 45
+
     steps:
-    - name: Checkout del repositorio
-      uses: actions/checkout@v3
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 1
 
-    - name: Configurar Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Instalar dependencias del sistema (FFmpeg)
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y ffmpeg
+      # ⚡ Cache v3 — invalida el viejo que traía moviepy 2.x
+      - name: Cache de pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-v3-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-v3-
+            ${{ runner.os }}-pip-
 
-    - name: Instalar dependencias de Python
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Instalar dependencias del sistema (FFmpeg + fuentes)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-dejavu-core fonts-noto-color-emoji
 
-    - name: Ejecutar Bot Ciencia Weird
-      env:
-        DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-        DEEPSEEK_MODEL: "deepseek-chat"
-        CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
-        YOUTUBE_USER_TOKEN: ${{ secrets.YOUTUBE_USER_TOKEN }}
-        YOUTUBE_PLAYLIST_ID: ${{ secrets.YOUTUBE_PLAYLIST_ID }}
-        
-        # Horarios (CDMX)
-        HORA_LARGO: 18
-        VARIACION_MINUTOS_LARGO: 30
-        HORA_SHORT_1: 11
-        VARIACION_MINUTOS_SHORT_1: 45
-        HORA_SHORT_2: 21
-        VARIACION_MINUTOS_SHORT_2: 60
-        
-        GENERAR_SHORT: "true"
-        PROGRAMAR_PICO: "true"
-        INTERVALO_MIN_HORAS: "20"
-        
-      run: python bot_ciencia.py
+      - name: Instalar dependencias de Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ⚡ FIX: fuerza moviepy 1.0.3 y limpia caché corrupto
+      - name: Asegurar moviepy 1.0.3 (fix cache)
+        run: |
+          pip install --force-reinstall --no-cache-dir moviepy==1.0.3 decorator imageio imageio-ffmpeg
+
+      # ⚡ Verificación rápida de imports (falla rápido si algo falta)
+      - name: Verificar imports críticos
+        run: |
+          python -c "from moviepy.editor import VideoClip; print('moviepy.editor OK')"
+          python -c "import edge_tts; print('edge_tts OK')"
+          python -c "import PIL; print('Pillow OK')"
+          python -c "import numpy; print('numpy OK')"
+          python -c "import json5; print('json5 OK')"
+          python -c "from googleapiclient.discovery import build; print('googleapiclient OK')"
+
+      - name: Mostrar estado actual
+        run: |
+          echo "=== estado_musica.json ==="
+          cat estado_musica.json 2>/dev/null || echo "(no existe)"
+          echo ""
+          echo "=== temas_shorts.json (últimos 3) ==="
+          python3 -c "
+          import json
+          try:
+              d = json.load(open('temas_shorts.json'))
+              print(d.get('temas', [])[-3:])
+          except:
+              print('(no existe)')
+          "
+
+      - name: Ejecutar Bot de Ciencia
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          DEEPSEEK_MODEL: "deepseek-chat"
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          YOUTUBE_USER_TOKEN: ${{ secrets.YOUTUBE_USER_TOKEN }}
+          YOUTUBE_PLAYLIST_ID: ${{ secrets.YOUTUBE_PLAYLIST_ID }}
+          FACEBOOK_LINK: ${{ secrets.FACEBOOK_LINK }}
+          FORCE_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.force_publish == true && 'true' || 'false' }}
+
+          # Horarios (CDMX)
+          HORA_LARGO: "18"
+          VARIACION_MINUTOS_LARGO: "30"
+          HORA_SHORT_1: "11"
+          VARIACION_MINUTOS_SHORT_1: "45"
+          HORA_SHORT_2: "21"
+          VARIACION_MINUTOS_SHORT_2: "60"
+
+          # Banderas
+          GENERAR_SHORT: "true"
+          PROGRAMAR_PICO: "true"
+          INTERVALO_MIN_HORAS: "20"
+          PYTHONUNBUFFERED: "1"
+        run: python bot_ciencia.py
+
+      - name: Commit y push del estado
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add estado_musica.json \
+                  titulos_publicados.json \
+                  temas_shorts.json \
+                  analytics_elite.json || true
+
+          if git diff --cached --quiet; then
+            echo "✅ Sin cambios en archivos de estado."
+            exit 0
+          fi
+
+          git commit -m "Actualizar estado ciencia [skip ci]"
+
+          for i in 1 2 3 4 5; do
+            if git pull --rebase --autostash origin main && git push origin main; then
+              echo "✅ Push exitoso (intento $i)"
+              exit 0
+            fi
+            echo "⚠️ Intento $i/5 falló, reintentando en 10s..."
+            sleep 10
+          done
+          echo "❌ Push falló tras 5 intentos"
+          exit 1
+
+      - name: Subir logs en caso de fallo
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: logs-${{ github.run_id }}
+          path: |
+            *.log
+            *.txt
+            *.json
+          retention-days: 7
+          if-no-files-found: ignore
