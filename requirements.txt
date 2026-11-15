@@ -1,0 +1,12 @@
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+edge-tts
+moviepy
+Pillow
+numpy
+requests
+urllib3
+json5
+pytz
+gTTS
