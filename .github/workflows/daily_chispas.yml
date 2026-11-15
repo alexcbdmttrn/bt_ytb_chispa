@@ -57,4 +57,4 @@ jobs:
         PROGRAMAR_PICO: "true"
         INTERVALO_MIN_HORAS: "24"
         
-      run: python bt_yt_psico.py
+        run: python bot_ciencia.py
