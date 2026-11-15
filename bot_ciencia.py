@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-CIENCIA WEIRD - Bot v1.0
+CIENCIA WEIRD - Bot v1.1
 Canal de divulgación científica con estética "weird" (curiosidades del cuerpo y el universo).
 Genera 1 video largo + 2 shorts diarios en una sola ejecución.
 
@@ -63,9 +63,10 @@ PLAYLIST_ID        = os.getenv("YOUTUBE_PLAYLIST_ID", "")
 CANAL_LINK    = "https://www.youtube.com/@cienciaweirdoficial"
 FACEBOOK_LINK = os.getenv("FACEBOOK_LINK", "")
 
-ESTADO_FILE  = "estado_ciencia_weird.json"
+# ⚡ CORREGIDO: Nombres de archivos para coincidir con el repositorio
+ESTADO_FILE  = "estado_musica.json"
 TITULOS_FILE = "titulos_publicados.json"
-TEMAS_FILE   = "temas_publicados.json"
+TEMAS_FILE   = "temas_shorts.json"
 
 CATEGORY_ID = "28"  # Ciencia y Tecnología
 
@@ -1706,7 +1707,7 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧬 CIENCIA WEIRD - BOT v1.0")
+    print("🧬 CIENCIA WEIRD - BOT v1.1")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
     print(f"📤 1 Video Largo (8-12 min) + 2 Shorts ÚNICOS (35-42s) | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
     print(f"🛡️  Fallback: Cloudflare → Pool Flux → Pexels → Gradiente")
