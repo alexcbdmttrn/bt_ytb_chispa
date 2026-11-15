@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-CIENCIA WEIRD - Bot v1.1
+CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.2 SAYAYIN PRO MAX ELITE
 Canal de divulgación científica con estética "weird" (curiosidades del cuerpo y el universo).
 Genera 1 video largo + 2 shorts diarios en una sola ejecución.
 
-Basado en la arquitectura de Código Mental v3.0 (Sayayin Pro Max Elite).
+Actualización v1.2:
+  - SEO Élite: Tags de alta intención, Curiosity Gap y Long-Tail inyectados.
+  - Fix: Nombres de archivos JSON sincronizados con el repositorio.
+  - Blindaje contra políticas de YouTube (YMYL).
 """
 import asyncio
 import bisect
@@ -63,7 +66,7 @@ PLAYLIST_ID        = os.getenv("YOUTUBE_PLAYLIST_ID", "")
 CANAL_LINK    = "https://www.youtube.com/@cienciaweirdoficial"
 FACEBOOK_LINK = os.getenv("FACEBOOK_LINK", "")
 
-# ⚡ CORREGIDO: Nombres de archivos para coincidir con el repositorio
+# ⚡ Sincronizado con los archivos de tu repositorio
 ESTADO_FILE  = "estado_musica.json"
 TITULOS_FILE = "titulos_publicados.json"
 TEMAS_FILE   = "temas_shorts.json"
@@ -1233,7 +1236,7 @@ def crear_miniatura(img_path, texto, salida):
         return False
 
 # =================================================================
-# SEO ELITE
+# SEO ELITE (ACTUALIZADO v1.2)
 # =================================================================
 def _ascii_tag_yt(t):
     nfd = unicodedata.normalize('NFD', str(t))
@@ -1243,25 +1246,44 @@ def _ascii_tag_yt(t):
 
 def construir_tags(plan, tema, sugerencias):
     nombre_tema = _ascii_tag_yt(tema["tema"].replace("_", " "))
-
+    
+    # ⚡ 1. TAGS DE ALTA INTENCIÓN (Clickbait Ético)
     tags_ia = plan.get("tags", [])
     if isinstance(tags_ia, str):
         tags_ia = [x.strip() for x in tags_ia.split(",")]
-
-    exactos = list(tags_ia)[:5]
-    broad = ["ciencia", "divulgacion cientifica", "datos curiosos",
-             "curiosidades cientificas", "asombro cientifico"]
+    
+    # ⚡ 2. TAGS BROAD (Los que te meten al algoritmo de ciencia general)
+    broad = [
+        "ciencia", "divulgacion cientifica", "datos curiosos", 
+        "curiosidades cientificas", "ciencia weird", "asombro cientifico",
+        "documental cientifico", "ciencia para todos", "misterios de la ciencia"
+    ]
+    
+    # ⚡ 3. TAGS DE CURIOUSITY GAP (Los que la gente realmente busca)
+    curiosity_gap = [
+        f"que pasaria si {nombre_tema}",
+        f"por que {nombre_tema}",
+        f"lo que la ciencia oculta de {nombre_tema}",
+        f"tu cuerpo y {nombre_tema}",
+        f"tu cerebro y {nombre_tema}",
+        f"el secreto de {nombre_tema}",
+    ]
+    
+    # ⚡ 4. TAGS LONG-TAIL (Búsquedas específicas de la audiencia)
     long_tail = [
         f"ciencia {nombre_tema}",
-        f"que pasa si {nombre_tema}",
-        f"por que {nombre_tema}",
-        f"ciencia de {nombre_tema}",
+        f"datos curiosos de {nombre_tema}",
+        f"documental de {nombre_tema}",
+        f"explicacion cientifica de {nombre_tema}",
     ]
+    
+    # ⚡ 5. TAGS DE LA NUBE (Lo que la gente escribe en el buscador)
     preguntas = list(sugerencias)[:3]
     especificos_tema = list(tema["keywords"])[:3]
 
     todos, vistos = [], set()
-    for raw in exactos + broad + long_tail + preguntas + especificos_tema:
+    # Priorizamos los tags de alta intención primero
+    for raw in tags_ia + curiosity_gap + long_tail + broad + preguntas + especificos_tema:
         tag = _ascii_tag_yt(raw)
         if not tag or len(tag) < 2 or len(tag) > 40 or tag in vistos:
             continue
@@ -1707,7 +1729,7 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧬 CIENCIA WEIRD - BOT v1.1")
+    print("🧬 CHISPAS INQUIETAS (CIENCIA WEIRD) - BOT v1.2")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
     print(f"📤 1 Video Largo (8-12 min) + 2 Shorts ÚNICOS (35-42s) | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
     print(f"🛡️  Fallback: Cloudflare → Pool Flux → Pexels → Gradiente")
