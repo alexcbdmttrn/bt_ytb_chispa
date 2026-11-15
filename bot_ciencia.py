@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.2 SAYAYIN PRO MAX ELITE
-Canal de divulgación científica con estética "weird" (curiosidades del cuerpo y el universo).
-Genera 1 video largo + 2 shorts diarios en una sola ejecución.
-
-Actualización v1.2:
-  - SEO Élite: Tags de alta intención, Curiosity Gap y Long-Tail inyectados.
-  - Fix: Nombres de archivos JSON sincronizados con el repositorio.
-  - Blindaje contra políticas de YouTube (YMYL).
+CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.3 (SEG_ESCENA=18s)
+v1.3 - SEG_ESCENA pasa de 14.0 → 18.0 segundos (ahorro ~23% de neuronas Cloudflare)
+v1.2 - SEO Curiosity Gap + Blindaje Anti-Demonetización
+v1.1 - Fix nombres JSON + estructura robusta
 """
 import asyncio
 import bisect
@@ -66,7 +62,7 @@ PLAYLIST_ID        = os.getenv("YOUTUBE_PLAYLIST_ID", "")
 CANAL_LINK    = "https://www.youtube.com/@cienciaweirdoficial"
 FACEBOOK_LINK = os.getenv("FACEBOOK_LINK", "")
 
-# ⚡ Sincronizado con los archivos de tu repositorio
+# ⚡ Nombres sincronizados con el repositorio
 ESTADO_FILE  = "estado_musica.json"
 TITULOS_FILE = "titulos_publicados.json"
 TEMAS_FILE   = "temas_shorts.json"
@@ -82,7 +78,10 @@ SHORT_CONTENT_MIN = 28
 SHORT_CONTENT_MAX = 36
 
 SEG_MAX_PALABRAS = 45
-SEG_ESCENA       = 14.0
+
+# ⚡ v1.3: 18 segundos por imagen (antes 14) → ahorro ~23% de Cloudflare
+SEG_ESCENA       = 18.0
+
 W, H, FPS        = 1920, 1080, 24
 VOL_FONDO        = 0.10
 USAR_IMAGENES_IA = os.getenv("USAR_IMAGENES_IA", "true").lower() == "true"
@@ -131,7 +130,7 @@ OUTROS = [
 ]
 
 # =================================================================
-# TEMAS — CIENCIA WEIRD (20 TEMAS EN 4 SUB-NICHOS)
+# TEMAS — CIENCIA WEIRD (20 TEMAS)
 # =================================================================
 TEMAS = [
     {"tema": "flema_sistema_inmune", "seed": "flema sistema inmune ciencia",
@@ -139,115 +138,96 @@ TEMAS = [
      "keywords": ["flema", "sistema inmune", "mucosidad", "defensas", "biologia"],
      "contextos": ["cuerpo humano", "microscopio", "laboratorio", "sistema inmune"],
      "hashtags": ["#SistemaInmune", "#Biologia", "#Ciencia"]},
-
     {"tema": "estornudo_peligro", "seed": "qué pasa si aguantas un estornudo",
      "angulo": "Por qué aguantarte un estornudo puede romperte un vaso sanguíneo, el tímpano o algo peor.",
      "keywords": ["estornudo", "presion", "cuerpo humano", "reflejo", "peligro"],
      "contextos": ["cuerpo humano", "anatomia abstracta", "laboratorio"],
      "hashtags": ["#Estornudo", "#CuerpoHumano", "#Ciencia"]},
-
     {"tema": "sudor_quimica", "seed": "por qué suda el cuerpo química",
      "angulo": "La química oculta del sudor: por qué tu cuerpo produce dos tipos distintos y qué revelan de tu estado emocional.",
      "keywords": ["sudor", "glándulas", "quimica", "cuerpo", "temperatura"],
      "contextos": ["cuerpo humano", "piel abstracta", "microscopio"],
      "hashtags": ["#Sudor", "#Biologia", "#Ciencia"]},
-
     {"tema": "bacterias_intestino", "seed": "bacterias intestino cerebro",
      "angulo": "Tienes más bacterias que células humanas: cómo tu intestino controla tu estado de ánimo y tus antojos.",
      "keywords": ["microbioma", "intestino", "bacterias", "cerebro", "digestion"],
      "contextos": ["intestino abstracto", "microscopio", "cerebro", "laboratorio"],
      "hashtags": ["#Microbioma", "#Intestino", "#Ciencia"]},
-
     {"tema": "lagrimas_tipos", "seed": "tipos de lágrimas ciencia",
      "angulo": "No todas las lágrimas son iguales: la ciencia descubrió que tu cuerpo produce 3 tipos distintos con funciones diferentes.",
      "keywords": ["lagrimas", "emociones", "ojos", "quimica", "cerebro"],
      "contextos": ["ojos abstractos", "microscopio", "cerebro"],
      "hashtags": ["#Lagrimas", "#Biologia", "#Ciencia"]},
-
     {"tema": "adn_neandertal", "seed": "adn neandertal humanos modernos",
      "angulo": "El 2% de tu ADN no es humano: los rasgos que heredaste de los neandertales y que aún hoy te afectan.",
      "keywords": ["adn", "neandertal", "genetica", "evolucion", "humanos"],
      "contextos": ["adn abstracto", "cadena de ADN", "evolucion humana abstracta"],
      "hashtags": ["#ADN", "#Genetica", "#Evolucion"]},
-
     {"tema": "vestigios_evolutivos", "seed": "vestigios evolutivos cuerpo humano",
      "angulo": "Las partes de tu cuerpo que ya no necesitas: los vestigios evolutivos que la evolución olvidó eliminar.",
      "keywords": ["vestigios", "evolucion", "cuerpo", "organos", "vestigial"],
      "contextos": ["cuerpo humano abstracto", "anatomia simplificada", "evolucion"],
      "hashtags": ["#Evolucion", "#CuerpoHumano", "#Ciencia"]},
-
     {"tema": "sentido_extra", "seed": "sexto sentido humano ciencia",
      "angulo": "El 'sexto sentido' que sí existe: la interocepcion, el sentido que tu cerebro usa para leer tu propio cuerpo.",
      "keywords": ["sexto sentido", "interocepcion", "cerebro", "sentidos", "percepcion"],
      "contextos": ["cerebro abstracto", "neuronas", "cuerpo simplificado"],
      "hashtags": ["#SextoSentido", "#Neurociencia", "#Ciencia"]},
-
     {"tema": "sangre_azul", "seed": "sangre azul personas raras",
      "angulo": "La condición genética que hace que tu sangre sea azul: por qué existe y quiénes la tienen.",
      "keywords": ["sangre", "genetica", "hemoglobina", "raro", "cuerpo"],
      "contextos": ["sangre abstracta", "microscopio", "adn abstracto"],
      "hashtags": ["#Genetica", "#Sangre", "#Ciencia"]},
-
     {"tema": "sin_huesos", "seed": "personas sin huesos condición rara",
      "angulo": "Las personas que nacen sin huesos: la rara condición que convierte el cuerpo en una máquina flexible.",
      "keywords": ["huesos", "genetica", "condicion rara", "cuerpo", "esqueleto"],
      "contextos": ["esqueleto abstracto", "cuerpo simplificado", "adn"],
      "hashtags": ["#Genetica", "#CuerpoHumano", "#Ciencia"]},
-
     {"tema": "casi_moriste", "seed": "veces que casi moriste sin darte cuenta",
      "angulo": "Las veces que casi moriste sin darte cuenta: los mecanismos de tu cuerpo que te salvan todos los días.",
      "keywords": ["supervivencia", "casi muerte", "cuerpo", "instinto", "peligro"],
      "contextos": ["cuerpo simplificado", "cerebro abstracto", "atmosfera oscura"],
      "hashtags": ["#Supervivencia", "#CuerpoHumano", "#Ciencia"]},
-
     {"tema": "cerebro_miente", "seed": "cerebro te miente ilusiones",
      "angulo": "Tu cerebro te miente 80 veces al día: las ilusiones perceptivas que te hacen ver cosas que no están ahí.",
      "keywords": ["cerebro", "ilusiones", "percepcion", "sesgos", "vision"],
      "contextos": ["cerebro abstracto", "neuronas", "patrones visuales"],
      "hashtags": ["#Cerebro", "#Neurociencia", "#Ciencia"]},
-
     {"tema": "veneno_cotidiano", "seed": "venenos cotidianos casa",
      "angulo": "Los venenos invisibles que tocas todos los días: sustancias comunes que tu cuerpo procesa sin que lo sepas.",
      "keywords": ["veneno", "quimica", "cotidiano", "toxinas", "cuerpo"],
      "contextos": ["laboratorio abstracto", "quimica", "casa simplificada"],
      "hashtags": ["#Quimica", "#Ciencia", "#Venenos"]},
-
     {"tema": "parasitos_cuerpo", "seed": "parásitos cuerpo humano ciencia",
      "angulo": "Los parásitos que viven en tu cuerpo sin que lo notes: el ecosistema oculto que llevas encima.",
      "keywords": ["parasitos", "microbios", "cuerpo", "biologia", "ecosistema"],
      "contextos": ["microscopio", "cuerpo abstracto", "laboratorio"],
      "hashtags": ["#Parasitos", "#Biologia", "#Ciencia"]},
-
     {"tema": "radiacion_cotidiana", "seed": "radiación cotidiana cuerpo",
      "angulo": "La radiación invisible que recibes todos los días: por qué tu cuerpo está diseñado para sobrevivirla.",
      "keywords": ["radiacion", "atomo", "cuerpo", "fisica", "energia"],
      "contextos": ["atomo abstracto", "radiacion", "laboratorio"],
      "hashtags": ["#Fisica", "#Radiacion", "#Ciencia"]},
-
     {"tema": "tierra_se_detiene", "seed": "qué pasaría si la tierra deja de girar",
      "angulo": "Qué pasaría si la Tierra dejara de girar mañana: los efectos en cadena sobre el clima, los océanos y tu cuerpo.",
      "keywords": ["tierra", "rotacion", "gravedad", "catastrofe", "fisica"],
      "contextos": ["planeta tierra abstracto", "espacio", "atmosfera"],
      "hashtags": ["#Tierra", "#Fisica", "#Ciencia"]},
-
     {"tema": "sol_se_apaga", "seed": "qué pasaría si el sol se apaga",
      "angulo": "Qué pasaría si el Sol se apagara por 24 horas: el efecto dominó que congelaría la Tierra en horas.",
      "keywords": ["sol", "energia", "tierra", "frio", "espacio"],
      "contextos": ["sol abstracto", "espacio profundo", "planeta congelado"],
      "hashtags": ["#Sol", "#Espacio", "#Ciencia"]},
-
     {"tema": "agujero_negro_sonido", "seed": "sonido agujero negro ciencia",
      "angulo": "El sonido que emite un agujero negro: por qué el universo tiene una 'banda sonora' que no deberías escuchar.",
      "keywords": ["agujero negro", "sonido", "universo", "espacio", "fisica"],
      "contextos": ["agujero negro abstracto", "espacio profundo", "ondas"],
      "hashtags": ["#AgujeroNegro", "#Espacio", "#Fisica"]},
-
     {"tema": "universo_infinito", "seed": "universo infinito o finito ciencia",
      "angulo": "¿El universo es infinito? Lo que la física moderna realmente sabe (y lo que no puede responder).",
      "keywords": ["universo", "infinito", "cosmologia", "espacio", "fisica"],
      "contextos": ["espacio profundo", "galaxias", "cosmos abstracto"],
      "hashtags": ["#Universo", "#Cosmologia", "#Ciencia"]},
-
     {"tema": "materia_oscura", "seed": "materia oscura que es ciencia",
      "angulo": "La materia oscura: el 27% del universo que no podemos ver y que sostiene toda la estructura cósmica.",
      "keywords": ["materia oscura", "universo", "galaxias", "fisica", "cosmologia"],
@@ -492,7 +472,7 @@ def elegir_tema(estado, youtube):
     return elegido
 
 # =================================================================
-# TÍTULOS Y MINIATURAS (ESTRATEGIA WEIRD SCIENCE)
+# TÍTULOS Y MINIATURAS
 # =================================================================
 GANCHOS = [
     "nunca", "nadie", "jamás", "prohibido", "secreto", "verdad",
@@ -970,7 +950,7 @@ def imagen_fallback_pexels(prompt_en, idx):
     return None
 
 # =================================================================
-# GRADIENTE OSCURO (fallback nivel 4)
+# GRADIENTE OSCURO
 # =================================================================
 def imagen_fallback(idx):
     img = Image.new("RGB", (W, H), (10, 15, 25))
@@ -1236,7 +1216,7 @@ def crear_miniatura(img_path, texto, salida):
         return False
 
 # =================================================================
-# SEO ELITE (ACTUALIZADO v1.2)
+# SEO ELITE (CURIOSITY GAP)
 # =================================================================
 def _ascii_tag_yt(t):
     nfd = unicodedata.normalize('NFD', str(t))
@@ -1246,20 +1226,19 @@ def _ascii_tag_yt(t):
 
 def construir_tags(plan, tema, sugerencias):
     nombre_tema = _ascii_tag_yt(tema["tema"].replace("_", " "))
-    
-    # ⚡ 1. TAGS DE ALTA INTENCIÓN (Clickbait Ético)
+
     tags_ia = plan.get("tags", [])
     if isinstance(tags_ia, str):
         tags_ia = [x.strip() for x in tags_ia.split(",")]
-    
-    # ⚡ 2. TAGS BROAD (Los que te meten al algoritmo de ciencia general)
+
+    exactos = list(tags_ia)[:5]
+
     broad = [
-        "ciencia", "divulgacion cientifica", "datos curiosos", 
+        "ciencia", "divulgacion cientifica", "datos curiosos",
         "curiosidades cientificas", "ciencia weird", "asombro cientifico",
         "documental cientifico", "ciencia para todos", "misterios de la ciencia"
     ]
-    
-    # ⚡ 3. TAGS DE CURIOUSITY GAP (Los que la gente realmente busca)
+
     curiosity_gap = [
         f"que pasaria si {nombre_tema}",
         f"por que {nombre_tema}",
@@ -1268,22 +1247,19 @@ def construir_tags(plan, tema, sugerencias):
         f"tu cerebro y {nombre_tema}",
         f"el secreto de {nombre_tema}",
     ]
-    
-    # ⚡ 4. TAGS LONG-TAIL (Búsquedas específicas de la audiencia)
+
     long_tail = [
         f"ciencia {nombre_tema}",
         f"datos curiosos de {nombre_tema}",
         f"documental de {nombre_tema}",
         f"explicacion cientifica de {nombre_tema}",
     ]
-    
-    # ⚡ 5. TAGS DE LA NUBE (Lo que la gente escribe en el buscador)
+
     preguntas = list(sugerencias)[:3]
     especificos_tema = list(tema["keywords"])[:3]
 
     todos, vistos = [], set()
-    # Priorizamos los tags de alta intención primero
-    for raw in tags_ia + curiosity_gap + long_tail + broad + preguntas + especificos_tema:
+    for raw in exactos + curiosity_gap + long_tail + broad + preguntas + especificos_tema:
         tag = _ascii_tag_yt(raw)
         if not tag or len(tag) < 2 or len(tag) > 40 or tag in vistos:
             continue
@@ -1729,9 +1705,9 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧬 CHISPAS INQUIETAS (CIENCIA WEIRD) - BOT v1.2")
+    print("🧬 CHISPAS INQUIETAS (CIENCIA WEIRD) - BOT v1.3 (SEG_ESCENA=18s)")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
-    print(f"📤 1 Video Largo (8-12 min) + 2 Shorts ÚNICOS (35-42s) | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
+    print(f"📤 1 Video Largo (8-12 min) + 2 Shorts | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
     print(f"🛡️  Fallback: Cloudflare → Pool Flux → Pexels → Gradiente")
     print(f"📂 Categoría YouTube: Ciencia y Tecnología (28)")
     print("=" * 70)
@@ -1891,6 +1867,11 @@ def main():
         print(f"🕖 Video Largo: {slot_largo:%Y-%m-%d %H:%M} CDMX")
         print(f"📱 Short 1:    {slot_short1:%Y-%m-%d %H:%M} CDMX")
         print(f"📱 Short 2:    {slot_short2:%Y-%m-%d %H:%M} CDMX")
+        dias = {slot_largo.date(), slot_short1.date(), slot_short2.date()}
+        if len(dias) != 1:
+            print(f"⚠️ ADVERTENCIA: slots en días distintos: {dias}")
+        else:
+            print(f"✅ Los 3 slots están el mismo día: {slot_largo.date()}")
     else:
         slot_largo = slot_short1 = slot_short2 = None
         print("📤 Publicación inmediata")
@@ -1978,6 +1959,8 @@ def main():
             print(f"📊 RESUMEN SHORTS: {len(shorts_creados)}/2 creados")
             for nombre, sid in shorts_creados:
                 print(f"   ✅ {nombre}: https://youtu.be/{sid}")
+            if len(shorts_creados) < 2:
+                print(f"   ⚠️ Faltan {2 - len(shorts_creados)} short(s).")
             print("=" * 70)
 
     ahora = datetime.now(TZ).isoformat()
