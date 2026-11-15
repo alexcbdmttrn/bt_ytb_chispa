@@ -1,12 +1,24 @@
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
-edge-tts
-moviepy
-Pillow
-numpy
-requests
-urllib3
-json5
-pytz
-gTTS
+# Core
+moviepy==1.0.3
+Pillow<10.0.0
+numpy>=1.24.0,<2.0
+requests>=2.31.0
+
+# Google APIs
+google-auth>=2.23.0
+google-api-python-client>=2.100.0
+google-auth-oauthlib>=1.1.0
+
+# TTS
+edge-tts>=6.1.9
+gTTS>=2.5.1
+
+# Utilidades
+pytz>=2023.3
+urllib3>=2.0.0
+json5>=0.9.14
+
+# Dependencias de moviepy 1.x (evitan fallos en CI)
+imageio>=2.9.0,<3.0.0
+imageio-ffmpeg>=0.4.7
+decorator>=4.4.2
