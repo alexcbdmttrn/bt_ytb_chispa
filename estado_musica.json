@@ -1,7 +1,22 @@
 {
-  "ultimos_fondos": [],
-  "videos": [],
-  "temas_recientes": [],
-  "ultima_publicacion": null,
+  "ultimos_fondos": [
+    "The Ascent.mp3"
+  ],
+  "videos": [
+    {
+      "id": "dHMCsg3w7Ss",
+      "titulo": "Lo que TU cuerpo haría si el Sol se apagara por 24 horas",
+      "tema": "sol_se_apaga",
+      "formato": "anatomia_del_asombro",
+      "perfil": "químico divulgador con enfoque en fenómenos cotidianos",
+      "dato_weird": "Tu cuerpo ya vivió un apagón solar de 8 minutos: la luz que te calienta ahora mismo salió del Sol hace 8 minutos y 20 segundos, y si el Sol se apagara, ese silencio luminoso sería el primer aviso de un efecto dominó que congelaría la Tierra en horas.",
+      "duracion_min": 10.9,
+      "fecha": "2026-11-14T19:15:19.724568-06:00"
+    }
+  ],
+  "temas_recientes": [
+    "sol_se_apaga"
+  ],
+  "ultima_publicacion": "2026-11-14T19:15:19.724568-06:00",
   "publicaciones_hoy": 0
 }
