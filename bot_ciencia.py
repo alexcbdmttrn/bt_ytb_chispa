@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-CÓDIGO MENTAL - Bot v3.3 (SEG_ESCENA=18s para ahorro de Cloudflare)
-v3.3 - SEG_ESCENA pasa de 14.0 → 18.0 segundos (ahorro ~23% de neuronas)
-v3.2 - Inyección de Palabras Semilla de Alto CTR (Curiosity Gap)
-v3.1 - Blindaje Anti-Demonetización (Casos de Estudio, Preguntas Retóricas, Overlays)
+CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.2 SAYAYIN PRO MAX ELITE
+Canal de divulgación científica con estética "weird" (curiosidades del cuerpo y el universo).
+Genera 1 video largo + 2 shorts diarios en una sola ejecución.
+
+Actualización v1.2:
+  - SEO Élite: Tags de alta intención, Curiosity Gap y Long-Tail inyectados.
+  - Fix: Nombres de archivos JSON sincronizados con el repositorio.
+  - Blindaje contra políticas de YouTube (YMYL).
 """
 import asyncio
 import bisect
@@ -58,13 +62,16 @@ PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
 
 YOUTUBE_USER_TOKEN = json.loads(os.getenv("YOUTUBE_USER_TOKEN") or "{}")
 PLAYLIST_ID        = os.getenv("YOUTUBE_PLAYLIST_ID", "")
-CANAL_LINK         = "https://www.youtube.com/@codigomentalnovisible"
 
-ESTADO_FILE  = "estado_shorts.json"
+CANAL_LINK    = "https://www.youtube.com/@cienciaweirdoficial"
+FACEBOOK_LINK = os.getenv("FACEBOOK_LINK", "")
+
+# ⚡ Sincronizado con los archivos de tu repositorio
+ESTADO_FILE  = "estado_musica.json"
 TITULOS_FILE = "titulos_publicados.json"
 TEMAS_FILE   = "temas_shorts.json"
 
-CATEGORY_ID = "27"
+CATEGORY_ID = "28"  # Ciencia y Tecnología
 
 DURACION_MINIMA_SEGUNDOS = 480
 DURACION_MAXIMA_SEGUNDOS = 720
@@ -75,189 +82,218 @@ SHORT_CONTENT_MIN = 28
 SHORT_CONTENT_MAX = 36
 
 SEG_MAX_PALABRAS = 45
-
-# ⚡ v3.3: 18 segundos por imagen (antes 14) → ahorro ~23% de Cloudflare
-SEG_ESCENA       = 18.0
-
+SEG_ESCENA       = 14.0
 W, H, FPS        = 1920, 1080, 24
 VOL_FONDO        = 0.10
 USAR_IMAGENES_IA = os.getenv("USAR_IMAGENES_IA", "true").lower() == "true"
 GENERAR_SHORT    = os.getenv("GENERAR_SHORT", "true").lower() == "true"
 PROGRAMAR_PICO   = os.getenv("PROGRAMAR_PICO", "true").lower() == "true"
 
-HORA_LARGO              = int(os.getenv("HORA_LARGO", "8"))
-VARIACION_MINUTOS_LARGO = int(os.getenv("VARIACION_MINUTOS_LARGO", "30"))
-HORA_SHORT_1            = int(os.getenv("HORA_SHORT_1", "10"))
+HORA_LARGO                = int(os.getenv("HORA_LARGO", "18"))
+VARIACION_MINUTOS_LARGO   = int(os.getenv("VARIACION_MINUTOS_LARGO", "30"))
+HORA_SHORT_1              = int(os.getenv("HORA_SHORT_1", "11"))
 VARIACION_MINUTOS_SHORT_1 = int(os.getenv("VARIACION_MINUTOS_SHORT_1", "45"))
-HORA_SHORT_2            = int(os.getenv("HORA_SHORT_2", "15"))
+HORA_SHORT_2              = int(os.getenv("HORA_SHORT_2", "21"))
 VARIACION_MINUTOS_SHORT_2 = int(os.getenv("VARIACION_MINUTOS_SHORT_2", "60"))
-INTERVALO_MIN_HORAS     = float(os.getenv("INTERVALO_MIN_HORAS", "20"))
-ACTIVAR_DISCLOSURE_IA   = True
+INTERVALO_MIN_HORAS       = float(os.getenv("INTERVALO_MIN_HORAS", "20"))
+ACTIVAR_DISCLOSURE_IA     = True
 
 DISCLOSURE_TEXT = (
-    "\n\n⚠️ Este contenido es un documental educativo elaborado con asistencia de "
-    "Inteligencia Artificial para garantizar la máxima claridad y calidad visual. "
-    "No sustituye el consejo de un profesional de la salud."
+    "\n\n⚠️ Este contenido es un documental científico elaborado con asistencia de "
+    "Inteligencia Artificial para la narración y visualizaciones. La información "
+    "está basada en fuentes científicas y tiene fines exclusivamente educativos."
 )
 
-VOZ_CANAL = {"voz": "es-MX-DaliaNeural", "tono": "+0Hz"}
-VOCES_RESPALDO = ["es-MX-DaliaNeural", "es-MX-JorgeNeural", "es-ES-ElviraNeural",
-                  "es-US-PalomaNeural", "es-CO-SalomeNeural"]
-RATE_ETAPA  = {"gancho": "+8%", "contexto": "+5%", "desarrollo": "+4%", "conclusion": "+2%"}
+VOZ_CANAL = {"voz": "es-MX-JorgeNeural", "tono": "-2Hz"}
+VOCES_RESPALDO = ["es-MX-JorgeNeural", "es-US-AlonsoNeural", "es-ES-AlvaroNeural",
+                  "es-CO-GonzaloNeural", "es-MX-DaliaNeural"]
+RATE_ETAPA  = {"gancho": "+6%", "contexto": "+4%", "desarrollo": "+3%", "conclusion": "+1%"}
 PAUSA_ETAPA = {"gancho": 0.4,   "contexto": 0.5,  "desarrollo": 0.45, "conclusion": 0.7}
 
 FONDOS_DISPONIBLES = [
-    "Celestial Drift.mp3", "Astral Alignment.mp3", "Deep Focus.mp3",
-    "Silent Mind.mp3", "Inner Cosmos.mp3", "Zenith.mp3",
+    "Binary Pulse.mp3", "Forward Momentum.mp3",
+    "Peak Momentum.mp3", "The Ascent.mp3",
 ]
 FUENTE_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/anton/Anton-Regular.ttf"
 
 CTA_SHORTS = [
-    "Esto es solo una parte. El video completo está en el canal. Suscríbete ahora.",
-    "El análisis completo te espera en el canal. Suscríbete para verlo.",
-    "Si esto te movió algo, el video completo está en el canal. Suscríbete.",
-    "No te quedes con la duda. El video completo ya está en el canal.",
+    "El video completo con todas las revelaciones está en el canal. Suscríbete para verlo.",
+    "Esto es solo una parte. La explicación científica completa te espera en el canal.",
+    "Si esto te sorprendió, el video completo te va a volar la cabeza. Está en el canal.",
+    "No te quedes con la duda. El análisis completo ya está disponible en el canal.",
+]
+
+OUTROS = [
+    "Y hasta aquí llega el video de hoy. Si aprendiste algo nuevo, suscríbete y activa "
+    "la campanita. Cuéntame en los comentarios: ¿cuál de estos datos te sorprendió más?",
+    "Eso fue todo por hoy. Si llegaste hasta el final, déjame un like y suscríbete para "
+    "no perderte el siguiente. ¿Tú ya sabías alguno de estos datos? Te leo abajo.",
 ]
 
 # =================================================================
-# TEMAS
+# TEMAS — CIENCIA WEIRD (20 TEMAS EN 4 SUB-NICHOS)
 # =================================================================
 TEMAS = [
-    {"tema": "detox_dopamina", "seed": "detox dopamina",
-     "angulo": "Cómo resetear tu cerebro en 30 días y recuperar la motivación real.",
-     "keywords": ["detox dopamina", "dopamina", "motivación", "adicción", "enfoque"],
-     "contextos": ["vida moderna", "smartphone", "adicción digital", "productividad"],
-     "hashtags": ["#Dopamina", "#Neurociencia"]},
-    {"tema": "lenguaje_corporal", "seed": "lenguaje corporal",
-     "angulo": "Las señales no verbales que revelan lo que la gente realmente piensa.",
-     "keywords": ["lenguaje corporal", "señales", "comunicación no verbal", "psicología"],
-     "contextos": ["oficina", "negociación", "reunión", "entrevista"],
-     "hashtags": ["#LenguajeCorporal", "#Psicologia"]},
-    {"tema": "psicologia_oscura", "seed": "psicología oscura",
-     "angulo": "Las técnicas de manipulación que usan los manipuladores y cómo defenderte.",
-     "keywords": ["psicología oscura", "manipulación", "narcisismo", "gaslighting"],
-     "contextos": ["relaciones", "trabajo", "familia", "amistad"],
-     "hashtags": ["#PsicologiaOscura", "#Manipulacion"]},
-    {"tema": "estoicismo", "seed": "estoicismo",
-     "angulo": "Cómo aplicar la sabiduría de Marco Aurelio al caos moderno.",
-     "keywords": ["estoicismo", "marco aurelio", "seneca", "filosofia", "disciplina"],
-     "contextos": ["vida moderna", "trabajo", "relaciones", "fracaso"],
-     "hashtags": ["#Estoicismo", "#MarcoAurelio"]},
-    {"tema": "habitos_atomicos", "seed": "hábitos atómicos",
-     "angulo": "Cómo construir hábitos que duran y eliminar los que te destruyen.",
-     "keywords": ["hábitos", "habitos atomicos", "productividad", "rutinas"],
-     "contextos": ["mañana", "trabajo", "ejercicio", "estudio"],
-     "hashtags": ["#Habitos", "#Productividad"]},
-    {"tema": "ansiedad", "seed": "ansiedad",
-     "angulo": "Cómo calmar tu mente ansiosa con técnicas basadas en neurociencia.",
-     "keywords": ["ansiedad", "estrés", "respiración", "mindfulness"],
-     "contextos": ["vida diaria", "trabajo", "relaciones", "insomnio"],
-     "hashtags": ["#Ansiedad", "#SaludMental"]},
-    {"tema": "concentracion", "seed": "concentración profunda",
-     "angulo": "Cómo recuperar la capacidad de concentrarte en un mundo de distracciones.",
-     "keywords": ["concentración", "foco", "deep work", "productividad"],
-     "contextos": ["trabajo", "estudio", "oficina", "home office"],
-     "hashtags": ["#Concentracion", "#DeepWork"]},
-    {"tema": "inteligencia_emocional", "seed": "inteligencia emocional",
-     "angulo": "Cómo dominar tus emociones en lugar de que ellas te dominen a ti.",
-     "keywords": ["inteligencia emocional", "emociones", "autocontrol", "empatia"],
-     "contextos": ["relaciones", "trabajo", "familia", "conflicto"],
-     "hashtags": ["#InteligenciaEmocional", "#Emociones"]},
-    {"tema": "sesgos_cognitivos", "seed": "sesgos cognitivos",
-     "angulo": "Los sesgos que tu cerebro usa para engañarte todos los días.",
-     "keywords": ["sesgos cognitivos", "pensamiento", "psicología", "decisión"],
-     "contextos": ["decisiones", "compras", "relaciones", "política"],
-     "hashtags": ["#SesgosCognitivos", "#Psicologia"]},
-    {"tema": "memoria", "seed": "técnicas de memoria",
-     "angulo": "Cómo aprender más rápido usando el método de los campeones de memoria.",
-     "keywords": ["memoria", "aprendizaje", "estudio", "técnicas"],
-     "contextos": ["estudio", "examen", "trabajo", "idiomas"],
-     "hashtags": ["#Memoria", "#Aprendizaje"]},
-    {"tema": "sueno", "seed": "sueño y rendimiento",
-     "angulo": "Cómo dormir mejor para rendir al máximo al día siguiente.",
-     "keywords": ["sueño", "dormir bien", "descanso", "rendimiento"],
-     "contextos": ["recámara", "rutina nocturna", "insomnio", "energía"],
-     "hashtags": ["#Sueño", "#Descanso"]},
-    {"tema": "disciplina", "seed": "disciplina y fuerza de voluntad",
-     "angulo": "Cómo construir una disciplina que no depende de la motivación.",
-     "keywords": ["disciplina", "fuerza de voluntad", "autocontrol", "consistencia"],
-     "contextos": ["vida diaria", "ejercicio", "trabajo", "hábitos"],
-     "hashtags": ["#Disciplina", "#Autocontrol"]},
-    {"tema": "banderas_rojas", "seed": "banderas rojas en relaciones",
-     "angulo": "Las señales de alarma que debes detectar antes de que sea tarde.",
-     "keywords": ["banderas rojas", "relaciones toxicas", "narcisismo", "manipulacion"],
-     "contextos": ["pareja", "amistad", "trabajo", "familia"],
-     "hashtags": ["#BanderasRojas", "#Relaciones"]},
-    {"tema": "procrastinacion", "seed": "procrastinación",
-     "angulo": "Por qué procrastinas y cómo hackear tu cerebro para dejar de hacerlo.",
-     "keywords": ["procrastinación", "productividad", "postergar", "motivacion"],
-     "contextos": ["trabajo", "estudio", "tareas", "metas"],
-     "hashtags": ["#Procrastinacion", "#Productividad"]},
-    {"tema": "soledad", "seed": "soledad y crecimiento",
-     "angulo": "Cómo transformar la soledad en tu mayor ventaja competitiva.",
-     "keywords": ["soledad", "autoconocimiento", "crecimiento", "independencia"],
-     "contextos": ["vida moderna", "trabajo remoto", "transiciones", "silencio"],
-     "hashtags": ["#Soledad", "#Crecimiento"]},
-    {"tema": "carisma", "seed": "carisma y presencia",
-     "angulo": "Los hábitos que hacen que las personas magnéticas te escuchen.",
-     "keywords": ["carisma", "presencia", "influencia", "confianza"],
-     "contextos": ["reuniones", "presentaciones", "entrevistas", "networking"],
-     "hashtags": ["#Carisma", "#Influencia"]},
-    {"tema": "dinero_mentalidad", "seed": "mentalidad de dinero",
-     "angulo": "Los patrones psicológicos que separan a ricos de pobres.",
-     "keywords": ["mentalidad de dinero", "riqueza", "psicología financiera", "abundancia"],
-     "contextos": ["finanzas", "inversión", "trabajo", "hábitos"],
-     "hashtags": ["#Mentalidad", "#Dinero"]},
-    {"tema": "estoicismo_amor", "seed": "estoicismo y amor",
-     "angulo": "Cómo amar sin perderte usando la sabiduría estoica.",
-     "keywords": ["estoicismo", "amor", "relaciones", "desapego"],
-     "contextos": ["pareja", "ruptura", "autoconocimiento", "relaciones"],
-     "hashtags": ["#Estoicismo", "#Amor"]},
-    {"tema": "mentalidad_crecimiento", "seed": "mentalidad de crecimiento",
-     "angulo": "Cómo cambiar tu mentalidad fija por una de crecimiento (Carol Dweck).",
-     "keywords": ["mentalidad de crecimiento", "fixed mindset", "aprendizaje", "fracaso"],
-     "contextos": ["estudio", "trabajo", "metas", "fracaso"],
-     "hashtags": ["#MentalidadDeCrecimiento", "#Psicologia"]},
-    {"tema": "miedo_al_rechazo", "seed": "miedo al rechazo",
-     "angulo": "Cómo superar el miedo a lo que los demás piensan de ti.",
-     "keywords": ["miedo al rechazo", "autoestima", "aprobación", "confianza"],
-     "contextos": ["relaciones", "trabajo", "vida social", "entrevistas"],
-     "hashtags": ["#MiedoAlRechazo", "#Autoestima"]},
+    {"tema": "flema_sistema_inmune", "seed": "flema sistema inmune ciencia",
+     "angulo": "Lo que la flema y los mocos realmente revelan sobre tu sistema inmune y por qué son tu primera línea de defensa.",
+     "keywords": ["flema", "sistema inmune", "mucosidad", "defensas", "biologia"],
+     "contextos": ["cuerpo humano", "microscopio", "laboratorio", "sistema inmune"],
+     "hashtags": ["#SistemaInmune", "#Biologia", "#Ciencia"]},
+
+    {"tema": "estornudo_peligro", "seed": "qué pasa si aguantas un estornudo",
+     "angulo": "Por qué aguantarte un estornudo puede romperte un vaso sanguíneo, el tímpano o algo peor.",
+     "keywords": ["estornudo", "presion", "cuerpo humano", "reflejo", "peligro"],
+     "contextos": ["cuerpo humano", "anatomia abstracta", "laboratorio"],
+     "hashtags": ["#Estornudo", "#CuerpoHumano", "#Ciencia"]},
+
+    {"tema": "sudor_quimica", "seed": "por qué suda el cuerpo química",
+     "angulo": "La química oculta del sudor: por qué tu cuerpo produce dos tipos distintos y qué revelan de tu estado emocional.",
+     "keywords": ["sudor", "glándulas", "quimica", "cuerpo", "temperatura"],
+     "contextos": ["cuerpo humano", "piel abstracta", "microscopio"],
+     "hashtags": ["#Sudor", "#Biologia", "#Ciencia"]},
+
+    {"tema": "bacterias_intestino", "seed": "bacterias intestino cerebro",
+     "angulo": "Tienes más bacterias que células humanas: cómo tu intestino controla tu estado de ánimo y tus antojos.",
+     "keywords": ["microbioma", "intestino", "bacterias", "cerebro", "digestion"],
+     "contextos": ["intestino abstracto", "microscopio", "cerebro", "laboratorio"],
+     "hashtags": ["#Microbioma", "#Intestino", "#Ciencia"]},
+
+    {"tema": "lagrimas_tipos", "seed": "tipos de lágrimas ciencia",
+     "angulo": "No todas las lágrimas son iguales: la ciencia descubrió que tu cuerpo produce 3 tipos distintos con funciones diferentes.",
+     "keywords": ["lagrimas", "emociones", "ojos", "quimica", "cerebro"],
+     "contextos": ["ojos abstractos", "microscopio", "cerebro"],
+     "hashtags": ["#Lagrimas", "#Biologia", "#Ciencia"]},
+
+    {"tema": "adn_neandertal", "seed": "adn neandertal humanos modernos",
+     "angulo": "El 2% de tu ADN no es humano: los rasgos que heredaste de los neandertales y que aún hoy te afectan.",
+     "keywords": ["adn", "neandertal", "genetica", "evolucion", "humanos"],
+     "contextos": ["adn abstracto", "cadena de ADN", "evolucion humana abstracta"],
+     "hashtags": ["#ADN", "#Genetica", "#Evolucion"]},
+
+    {"tema": "vestigios_evolutivos", "seed": "vestigios evolutivos cuerpo humano",
+     "angulo": "Las partes de tu cuerpo que ya no necesitas: los vestigios evolutivos que la evolución olvidó eliminar.",
+     "keywords": ["vestigios", "evolucion", "cuerpo", "organos", "vestigial"],
+     "contextos": ["cuerpo humano abstracto", "anatomia simplificada", "evolucion"],
+     "hashtags": ["#Evolucion", "#CuerpoHumano", "#Ciencia"]},
+
+    {"tema": "sentido_extra", "seed": "sexto sentido humano ciencia",
+     "angulo": "El 'sexto sentido' que sí existe: la interocepcion, el sentido que tu cerebro usa para leer tu propio cuerpo.",
+     "keywords": ["sexto sentido", "interocepcion", "cerebro", "sentidos", "percepcion"],
+     "contextos": ["cerebro abstracto", "neuronas", "cuerpo simplificado"],
+     "hashtags": ["#SextoSentido", "#Neurociencia", "#Ciencia"]},
+
+    {"tema": "sangre_azul", "seed": "sangre azul personas raras",
+     "angulo": "La condición genética que hace que tu sangre sea azul: por qué existe y quiénes la tienen.",
+     "keywords": ["sangre", "genetica", "hemoglobina", "raro", "cuerpo"],
+     "contextos": ["sangre abstracta", "microscopio", "adn abstracto"],
+     "hashtags": ["#Genetica", "#Sangre", "#Ciencia"]},
+
+    {"tema": "sin_huesos", "seed": "personas sin huesos condición rara",
+     "angulo": "Las personas que nacen sin huesos: la rara condición que convierte el cuerpo en una máquina flexible.",
+     "keywords": ["huesos", "genetica", "condicion rara", "cuerpo", "esqueleto"],
+     "contextos": ["esqueleto abstracto", "cuerpo simplificado", "adn"],
+     "hashtags": ["#Genetica", "#CuerpoHumano", "#Ciencia"]},
+
+    {"tema": "casi_moriste", "seed": "veces que casi moriste sin darte cuenta",
+     "angulo": "Las veces que casi moriste sin darte cuenta: los mecanismos de tu cuerpo que te salvan todos los días.",
+     "keywords": ["supervivencia", "casi muerte", "cuerpo", "instinto", "peligro"],
+     "contextos": ["cuerpo simplificado", "cerebro abstracto", "atmosfera oscura"],
+     "hashtags": ["#Supervivencia", "#CuerpoHumano", "#Ciencia"]},
+
+    {"tema": "cerebro_miente", "seed": "cerebro te miente ilusiones",
+     "angulo": "Tu cerebro te miente 80 veces al día: las ilusiones perceptivas que te hacen ver cosas que no están ahí.",
+     "keywords": ["cerebro", "ilusiones", "percepcion", "sesgos", "vision"],
+     "contextos": ["cerebro abstracto", "neuronas", "patrones visuales"],
+     "hashtags": ["#Cerebro", "#Neurociencia", "#Ciencia"]},
+
+    {"tema": "veneno_cotidiano", "seed": "venenos cotidianos casa",
+     "angulo": "Los venenos invisibles que tocas todos los días: sustancias comunes que tu cuerpo procesa sin que lo sepas.",
+     "keywords": ["veneno", "quimica", "cotidiano", "toxinas", "cuerpo"],
+     "contextos": ["laboratorio abstracto", "quimica", "casa simplificada"],
+     "hashtags": ["#Quimica", "#Ciencia", "#Venenos"]},
+
+    {"tema": "parasitos_cuerpo", "seed": "parásitos cuerpo humano ciencia",
+     "angulo": "Los parásitos que viven en tu cuerpo sin que lo notes: el ecosistema oculto que llevas encima.",
+     "keywords": ["parasitos", "microbios", "cuerpo", "biologia", "ecosistema"],
+     "contextos": ["microscopio", "cuerpo abstracto", "laboratorio"],
+     "hashtags": ["#Parasitos", "#Biologia", "#Ciencia"]},
+
+    {"tema": "radiacion_cotidiana", "seed": "radiación cotidiana cuerpo",
+     "angulo": "La radiación invisible que recibes todos los días: por qué tu cuerpo está diseñado para sobrevivirla.",
+     "keywords": ["radiacion", "atomo", "cuerpo", "fisica", "energia"],
+     "contextos": ["atomo abstracto", "radiacion", "laboratorio"],
+     "hashtags": ["#Fisica", "#Radiacion", "#Ciencia"]},
+
+    {"tema": "tierra_se_detiene", "seed": "qué pasaría si la tierra deja de girar",
+     "angulo": "Qué pasaría si la Tierra dejara de girar mañana: los efectos en cadena sobre el clima, los océanos y tu cuerpo.",
+     "keywords": ["tierra", "rotacion", "gravedad", "catastrofe", "fisica"],
+     "contextos": ["planeta tierra abstracto", "espacio", "atmosfera"],
+     "hashtags": ["#Tierra", "#Fisica", "#Ciencia"]},
+
+    {"tema": "sol_se_apaga", "seed": "qué pasaría si el sol se apaga",
+     "angulo": "Qué pasaría si el Sol se apagara por 24 horas: el efecto dominó que congelaría la Tierra en horas.",
+     "keywords": ["sol", "energia", "tierra", "frio", "espacio"],
+     "contextos": ["sol abstracto", "espacio profundo", "planeta congelado"],
+     "hashtags": ["#Sol", "#Espacio", "#Ciencia"]},
+
+    {"tema": "agujero_negro_sonido", "seed": "sonido agujero negro ciencia",
+     "angulo": "El sonido que emite un agujero negro: por qué el universo tiene una 'banda sonora' que no deberías escuchar.",
+     "keywords": ["agujero negro", "sonido", "universo", "espacio", "fisica"],
+     "contextos": ["agujero negro abstracto", "espacio profundo", "ondas"],
+     "hashtags": ["#AgujeroNegro", "#Espacio", "#Fisica"]},
+
+    {"tema": "universo_infinito", "seed": "universo infinito o finito ciencia",
+     "angulo": "¿El universo es infinito? Lo que la física moderna realmente sabe (y lo que no puede responder).",
+     "keywords": ["universo", "infinito", "cosmologia", "espacio", "fisica"],
+     "contextos": ["espacio profundo", "galaxias", "cosmos abstracto"],
+     "hashtags": ["#Universo", "#Cosmologia", "#Ciencia"]},
+
+    {"tema": "materia_oscura", "seed": "materia oscura que es ciencia",
+     "angulo": "La materia oscura: el 27% del universo que no podemos ver y que sostiene toda la estructura cósmica.",
+     "keywords": ["materia oscura", "universo", "galaxias", "fisica", "cosmologia"],
+     "contextos": ["galaxias abstractas", "espacio profundo", "particulas"],
+     "hashtags": ["#MateriaOscura", "#Universo", "#Fisica"]},
 ]
 
 # =================================================================
 # FORMATOS Y PERFILES
 # =================================================================
 FORMATOS_NARRACION = [
-    {"nombre": "lista_educativa",
-     "instruccion": ("Formato LISTA EDUCATIVA. El narrador presenta los puntos de forma "
-                     "numerada y progresiva, con un ejemplo cotidiano por punto. "
-                     "Cada punto debe sentirse autoconclusivo pero enlazado al tema global.")},
-    {"nombre": "caso_de_estudio",
-     "instruccion": ("Formato CASO DE ESTUDIO. Presenta a una persona concreta (nombre, "
-                     "edad, contexto) y analiza su situación desde la psicología. "
-                     "El espectador debe identificarse con el caso.")},
-    {"nombre": "explicacion_cientifica",
-     "instruccion": ("Formato EXPLICACIÓN CIENTÍFICA. Cita estudios, autores y mecanismos "
-                     "cerebrales. Explica POR QUÉ funciona algo, no solo QUÉ funciona. "
-                     "Tono accesible pero con autoridad.")},
-    {"nombre": "historia_personal",
-     "instruccion": ("Formato HISTORIA PERSONAL. Narra en primera persona un cambio real "
-                     "del narrador (ficticio pero creíble). Conecta la vivencia con la ciencia.")},
-    {"nombre": "analogia_poderosa",
-     "instruccion": ("Formato ANALOGÍA PODEROSA. Explora el tema a través de una metáfora "
-                     "central (jardín, máquina, ciudad, etc.) que hace tangible lo abstracto.")},
+    {"nombre": "lista_explicativa_weird",
+     "instruccion": ("Formato LISTA DE ASOMBRO CIENTÍFICO. El narrador presenta 5 'micro-revelaciones' "
+                     "sobre el cuerpo/universo del espectador, cada una con un dato contraintuitivo, "
+                     "un ejemplo cotidiano y una explicación científica breve. Tono: asombro documental, "
+                     "NO consejo médico. Cada punto termina con un mini-cliffhanger que enlaza al siguiente.")},
+    {"nombre": "que_pasaria_si",
+     "instruccion": ("Formato ESCENARIO HIPOTÉTICO ('¿Qué pasaría si...?'). Desarrolla un escenario "
+                     "imposible pero científicamente fundamentado. Estructura: 1) la premisa, "
+                     "2) las consecuencias en cadena, 3) lo que la ciencia dice que pasaría. "
+                     "NO des consejos de supervivencia, solo explica la física/biología.")},
+    {"nombre": "mito_vs_ciencia",
+     "instruccion": ("Formato MITO VS EVIDENCIA. Empieza con una creencia popular sobre el cuerpo o el universo "
+                     "('Todos creen que...'). Luego revela lo que la ciencia realmente dice, con estudios "
+                     "y mecanismos concretos. Cierra con una pregunta que invite a comentar.")},
+    {"nombre": "anatomia_del_asombro",
+     "instruccion": ("Formato ANATOMÍA DEL ASOMBRO. Explora un solo fenómeno (ej. la autofagia, "
+                     "la gravedad cuántica, el microbioma) desde múltiples ángulos: qué es, "
+                     "cómo funciona, por qué es más extraño de lo que parece. Estilo: documental "
+                     "científico de alta gama, tipo BBC/Nat Geo.")},
+    {"nombre": "experimento_mental",
+     "instruccion": ("Formato EXPERIMENTO MENTAL. Plantea un escenario contraintuitivo y guía al "
+                     "espectador paso a paso por lo que la ciencia predice. Uso intensivo de "
+                     "'imagina que...' y 'esto significa que...'. El espectador debe salir "
+                     "sintiendo que aprendió algo que no sabía que no sabía.")},
 ]
 
 PERFILES_NARRADOR = [
-    "psicólogo clínico con consulta privada",
-    "coach de alto rendimiento",
-    "profesor de filosofía aplicada",
-    "neurocientífico divulgador",
-    "terapeuta cognitivo-conductual",
-    "escritor de desarrollo personal",
-    "emprendedor serial con background en psicología",
-    "ex-monje que estudió estoicismo",
+    "divulgador científico con formación en biología",
+    "astrofísico divulgador especializado en cosmología",
+    "neurocientífico especializado en percepción",
+    "microbiólogo con experiencia en divulgación",
+    "físico teórico especializado en escenarios hipotéticos",
+    "biólogo evolutivo especializado en comportamiento humano",
+    "químico divulgador con enfoque en fenómenos cotidianos",
+    "documentalista científico de estilo BBC",
 ]
 
 # =================================================================
@@ -406,7 +442,7 @@ def puntuar_demanda(youtube, consulta):
         return None
     try:
         desde = (datetime.now(timezone.utc) - timedelta(days=90)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        q = f"psicología {consulta}"
+        q = f"ciencia {consulta}"
         r = youtube.search().list(part="id", q=q, type="video", order="viewCount",
                                   publishedAfter=desde, relevanceLanguage="es",
                                   regionCode="MX", maxResults=8).execute()
@@ -456,26 +492,30 @@ def elegir_tema(estado, youtube):
     return elegido
 
 # =================================================================
-# TÍTULOS Y MINIATURAS (ESTRATEGIA CURIOSITY GAP v3.2)
+# TÍTULOS Y MINIATURAS (ESTRATEGIA WEIRD SCIENCE)
 # =================================================================
 GANCHOS = [
-    "nunca", "nadie", "jamás", "nadie te", "prohibido", "secreto",
-    "verdad", "nadie quiere", "no te dijeron", "ocultan",
-    "cambia", "rompe", "destruye", "mejor", "peor", "por qué",
-    "cómo", "si ", "cuando", "5 ", "7 ", "3 ", "10 ", "?", "!",
-    "nadie", "evita", "deja de", "empieza a",
-    "la trampa", "el sesgo", "el error", "la mentira", "te sabotea",
-    "tu cerebro", "manipulan", "ocultan", "peligro", "cuidado",
-    "los expertos", "psicología oscura", "señales de", "lo que callan"
+    "nunca", "nadie", "jamás", "prohibido", "secreto", "verdad",
+    "ocultan", "te miente", "tu cuerpo", "tu cerebro", "tu adn",
+    "lo que pasa", "qué pasaría", "por qué", "cómo", "si ",
+    "cuando", "5 ", "7 ", "3 ", "?", "!",
+    "lo que tu cuerpo", "lo que tu cerebro", "lo que nadie te dice",
+    "el error de tu cuerpo", "la mentira de tu cerebro", "señales de que",
+    "el dato que", "la ciencia revela", "lo que ocultan los estudios",
+    "no deberías", "nunca hagas", "nadie sabe por qué",
 ]
-PROHIBIDAS = ["testimonio real", "caso real", "100% real", "verídico", "comprobado",
-              "garantizado", "secreto revelado", "hack", "truco", "trucos"]
-GENERICAS = ["psicologia", "filosofia", "relato", "historia de"]
+PROHIBIDAS = [
+    "testimonio real", "caso real", "100% real", "verídico", "comprobado",
+    "garantizado", "secreto revelado", "hack", "truco", "trucos",
+    "cura", "curar", "remedio", "milagro", "adelgaza", "engorda",
+    "peligroso para tu salud", "mata", "muerte segura",
+]
+GENERICAS = ["ciencia", "datos curiosos", "sabias que", "curiosidades", "top 10", "lista de"]
 
 def limpiar_titulo(t):
     t = t.strip().strip('"').strip("'")
     t = re.sub(r"\s+", " ", t)
-    t = re.sub(r"\s*[-|–]\s*psicología.*$", "", t, flags=re.I)
+    t = re.sub(r"\s*[-|–]\s*ciencia.*$", "", t, flags=re.I)
     t = t.rstrip(".")
     palabras = t.split()
     caps = [w for w in palabras if len(re.sub(r"\W", " ", w)) >= 3 and w.isupper()]
@@ -485,7 +525,7 @@ def limpiar_titulo(t):
                     for w in palabras]
     return " ".join(palabras)
 
-def puntuar_titulo(t, dato_contraintuitivo=""):
+def puntuar_titulo(t, dato_weird=""):
     s, n, tl = 0, len(t), t.lower()
     if 45 <= n <= 68:
         s += 4
@@ -499,14 +539,14 @@ def puntuar_titulo(t, dato_contraintuitivo=""):
 
     if re.search(r'\bsi\b.{1,60}(nunca|no\s)', tl, re.I | re.S):
         s += 6
-    if re.search(r'\b\d{1,2}\s+(señales|habitos|hábitos|claves|trucos|reglas|formas|maneras|razones)', tl):
+    if re.search(r'\b\d{1,2}\s+(señales|datos|claves|formas|maneras|razones|cosas)', tl):
         s += 4
 
-    if re.search(r'\b(la trampa|el sesgo|el error|la mentira|te sabotea|tu cerebro|manipulan|ocultan|lo que callan)\b', tl):
+    if re.search(r'\b(la trampa|el error|la mentira|tu cerebro|tu cuerpo|te miente|ocultan|lo que callan|nadie sabe|nunca hagas)\b', tl):
         s += 10
 
-    if dato_contraintuitivo:
-        dc_words = set(re.findall(r"\w+", dato_contraintuitivo.lower())) - {
+    if dato_weird:
+        dc_words = set(re.findall(r"\w+", dato_weird.lower())) - {
             "de", "la", "el", "que", "y", "en", "un", "una", "por", "para", "con", "los", "las"}
         tit_words = set(re.findall(r"\w+", tl))
         if len(dc_words & tit_words) >= 2:
@@ -525,7 +565,7 @@ def puntuar_titulo(t, dato_contraintuitivo=""):
         s -= 1
     return s
 
-def elegir_titulo(candidatos, dato_contraintuitivo=""):
+def elegir_titulo(candidatos, dato_weird=""):
     puntuados = []
     for c in candidatos:
         if not isinstance(c, str):
@@ -533,7 +573,7 @@ def elegir_titulo(candidatos, dato_contraintuitivo=""):
         base = limpiar_titulo(c)
         if len(base) < 25 or titulo_ya_publicado(base):
             continue
-        puntuados.append((puntuar_titulo(base, dato_contraintuitivo), base))
+        puntuados.append((puntuar_titulo(base, dato_weird), base))
     if not puntuados:
         return None
     puntuados.sort(reverse=True)
@@ -544,9 +584,8 @@ def elegir_titulo(candidatos, dato_contraintuitivo=""):
 def elegir_texto_portada(opciones, titulo):
     pt = set(re.findall(r"\w+", titulo.lower()))
     mejor = None
-
-    fallbacks_virales = ["TE MIENTEN", "PELIGRO", "OCULTAN", "TRAMPA", "TU CEREBRO", "NO LO HAGAS", "MANIPULAN"]
-
+    fallbacks_virales = ["TU CUERPO", "TU CEREBRO", "TE MIENTEN", "NUNCA HAGAS",
+                         "EL ERROR", "OCULTAN", "¿QUÉ PASARÍA?"]
     for o in opciones or []:
         if not isinstance(o, str):
             continue
@@ -556,45 +595,40 @@ def elegir_texto_portada(opciones, titulo):
             continue
         solape = len({x.lower() for x in w} & pt) / len(w)
         sc = (3 if len(w) in (2, 3) else 1) - 2 * solape + (1 if "?" in o else 0)
-
-        if any(x in o for x in ["MIENTEN", "PELIGRO", "OCULTAN", "TRAMPA", "CEREBRO", "MANIPULAN", "ERROR"]):
+        if any(x in o for x in ["CUERPO", "CEREBRO", "MIENTEN", "OCULTAN",
+                                 "NUNCA", "ERROR", "ADN", "PASARÍA"]):
             sc += 5
-
         if mejor is None or sc > mejor[0]:
             mejor = (sc, o)
-
     if not mejor:
         return random.choice(fallbacks_virales)
-
     return mejor[1]
 
 # =================================================================
 # GENERACIÓN DE CONTENIDO
 # =================================================================
 ESQUEMA_PLAN = """{
- "titulos": ["6 títulos de 45-68 caracteres con ESTRUCTURA DISTINTA. NUNCA termines con '| Psicología'. AL MENOS 3 deben incluir GANCHOS DE CURIOSIDAD ('La trampa psicológica...', 'El error que...', 'Por qué tu cerebro te sabotea...') o el dato_contraintuitivo."],
+ "titulos": ["6 títulos de 45-68 caracteres con ESTRUCTURA DISTINTA. NUNCA termines con '| Ciencia'. AL MENOS 3 DEBEN usar la fórmula 'Weird Science': 'Lo que TU [parte del cuerpo] hace cuando...', 'Por qué NUNCA debes [acción cotidiana]', 'El [dato] que la ciencia oculta sobre...', 'Tu [órgano] te está mintiendo...'. Combina con el dato_weird"],
  "tema_central": "descripción breve del tema",
- "anio_estudio": 2023,
- "protagonista": "nombre de pila del narrador (ej: Daniel, Andrea)",
- "dato_contraintuitivo": "CRÍTICO: el dato más sorprendente que rompe expectativas. Ej: 'sonreír más te hace menos creíble', 'estudiar más horas reduce el aprendizaje', 'la multitarea baja el CI 10 puntos'. Debe aparecer en AL MENOS 3 de los 6 títulos",
- "gancho": "1-2 frases (máx 35 palabras) que abren el video con el dato_contraintuitivo en primera persona. DEBE GENERAR CURIOSIDAD INMEDIATA.",
+ "dato_weird": "CRÍTICO: el dato más contraintuitivo, extraño o perturbador del video. Ej: 'tu cuerpo produce electricidad para encender un LED', 'tienes 39 billones de bacterias y solo 30 billones de células humanas', 'tu cerebro te miente 80 veces al día', 'el 2% de tu ADN es neandertal'. Debe aparecer en AL MENOS 3 de los 6 títulos",
+ "gancho": "1-2 frases (máx 35 palabras) que abren el video con el dato_weird en segunda persona ('TU cuerpo...', 'TU cerebro...'). DEBE generar asombro inmediato, NO miedo",
  "resumen": "sinopsis de 2-3 oraciones sin spoilers",
  "palabras_clave": ["5 keywords SEO en español, la primera es el keyword principal del video"],
- "palabras_portada": ["3 opciones de 2-3 palabras EN MAYÚSCULAS (ej: TE MIENTEN, PELIGRO, EL SESGO, TRAMPA MENTAL)"],
- "miniatura_escena": "4-6 palabras en inglés para buscar/imagen (ej: brain scan, nervous person meeting, two people arguing)",
+ "palabras_portada": ["3 opciones de 2-3 palabras EN MAYÚSCULAS (ej: TU CUERPO, NUNCA HAGAS, TE MIENTEN, EL ERROR, OCULTAN, TU CEREBRO)"],
+ "miniatura_escena": "4-6 palabras en inglés para imagen abstracta científica (ej: glowing cells macro, abstract brain neurons, cosmic nebula dark, microscope bacteria)",
  "descripcion_gancho": "2 líneas: la primera con el keyword principal y una promesa concreta; la segunda invita a suscribirse",
- "titulo_short": "gancho de máx 55 caracteres para YouTube Short",
- "pregunta_comentario": "pregunta corta que invite a comentar",
- "tags": ["10 tags ULTRA-ESPECÍFICOS: 2-3 del tema central, 2-3 de la mecánica, 1-2 preguntas de audiencia, 1-2 'psicologia + elemento', 1-2 'estoicismo + elemento'"],
- "puntos": [{"titulo": "2-4 palabras con intriga", "resumen": "qué se explica y qué idea clave se deja"}]
+ "titulo_short": "gancho de máx 55 caracteres para un YouTube Short",
+ "pregunta_comentario": "pregunta corta que invite a comentar basada en el dato (ej: '¿tú ya sabías esto de tu cuerpo?')",
+ "tags": ["10 tags ULTRA-ESPECÍFICOS: 2-3 del tema científico, 2-3 del mecanismo biológico/físico, 1-2 preguntas de audiencia, 1-2 'ciencia + elemento', 1-2 'datos curiosos + elemento'"],
+ "puntos": [{"titulo": "2-4 palabras con intriga", "resumen": "qué se explica y qué micro-revelación deja"}]
 }"""
 
 def generar_plan(tema, contexto, sugerencias, titulos_previos, formato, perfil):
     prev = "\n".join(f"- {t}" for t in titulos_previos) or "Ninguno"
     sug  = "\n".join(f"- {s}" for s in sugerencias) or "Ninguna"
 
-    prompt = f"""Eres el director de un canal de DOCUMENTALES EDUCATIVOS sobre psicología aplicada.
-Diseña el PLAN de un video educativo de ~9-11 minutos, con {NUM_PUNTOS} puntos principales.
+    prompt = f"""Eres showrunner de un canal de DIVULGACIÓN CIENTÍFICA "WEIRD" en español (México/Latam).
+Diseña el PLAN de un video de ~9-11 minutos, con {NUM_PUNTOS} "micro-revelaciones" científicas.
 
 TEMA: {tema['tema']} | ÁNGULO: {tema['angulo']}
 CONTEXTO: {contexto}
@@ -609,21 +643,25 @@ PERFIL DEL NARRADOR: {perfil}
 BÚSQUEDAS REALES YOUTUBE: {sug}
 TÍTULOS YA PUBLICADOS (no repetir): {prev}
 
-━━━ REGLA CRÍTICA: TÍTULO CURIOSITY GAP (CLICKBAIT ÉTICO) ━━━
-El CTR es el rey. El canal usa títulos que crean una "brecha de curiosidad".
-Usa fórmulas como:
-  • "La trampa psicológica que usan los..."
-  • "Por qué tu cerebro te sabotea con..."
-  • "El error mental que comete el 90%..."
-  • "Lo que ocultan los expertos sobre..."
-  • "El sesgo que te hace tomar malas decisiones"
+━━━ REGLA CRÍTICA: TÍTULO "WEIRD SCIENCE" (CURIOSIDAD + ASOMBRO) ━━━
+El canal viraliza con títulos que hacen que el espectador piense "no puedo creer que esto sea real". Fórmulas:
+  • "Lo que TU [parte del cuerpo] hace cuando [acción cotidiana]"
+  • "Por qué NUNCA debes [acción común] (la ciencia lo explica)"
+  • "El [dato] que la ciencia oculta sobre [tema]"
+  • "Tu [órgano] te está mintiendo: el error de [X]"
 El campo 'titulos' debe contener 6 opciones. AL MENOS 3 deben usar esta estructura.
 
-REGLAS DE CONTENIDO (ANTI-DEMONETIZACIÓN YMYL):
-1. Tono de DOCUMENTAL CIENTÍFICO. No des consejos médicos directos ("debes hacer X"). Usa "La ciencia dice...", "Los estudios demuestran...".
-2. Cada punto debe aportar VALOR concreto (no relleno).
-3. Incluye al menos 1 estudio o autor por video.
-4. El gancho debe INCLUIR el dato_contraintuitivo.
+━━━ REGLA CRÍTICA: DATO WEIRD ━━━
+El campo 'dato_weird' debe ser un hecho científico real pero tan extraño que parezca mentira.
+DEBE ser verificable y aparecer en AL MENOS 3 de los 6 títulos.
+
+━━━ REGLAS DE CONTENIDO ━━━
+1. CADA punto debe aportar un DATO CIENTÍFICO CONCRETO (no relleno, no opinión).
+2. Cada punto debe tener un mini-cliffhanger al final que conecte con el siguiente.
+3. El gancho debe INCLUIR el dato_weird en segunda persona ("TU cuerpo...").
+4. Tono: ASOMBRO DOCUMENTAL (estilo BBC / Nat Geo / Veritasium), NUNCA consejo médico.
+5. NUNCA uses lenguaje de "debes hacer X para curar Y". Solo "la ciencia dice que...".
+6. Los 5 puntos deben ser DIFERENTES entre sí pero conectar con el tema central.
 
 Responde SOLO con este JSON:
 {ESQUEMA_PLAN}"""
@@ -632,7 +670,7 @@ Responde SOLO con este JSON:
     if not (isinstance(plan.get("titulos"), list) and len(plan["titulos"]) >= 3
             and isinstance(plan.get("puntos"), list) and len(plan["puntos"]) >= NUM_PUNTOS
             and plan.get("gancho") and plan.get("palabras_portada")
-            and plan.get("dato_contraintuitivo")):
+            and plan.get("dato_weird")):
         raise ValueError("plan incompleto")
     return plan
 
@@ -649,45 +687,49 @@ def generar_puntos(plan, tema, contexto):
                        for i, p in enumerate(puntos))
     textos = []
     formato    = plan.get("_formato_instruccion", "Explicación directa.")
-    perfil     = plan.get("_perfil_narrador", "psicólogo")
-    nombre_fmt = plan.get("_nombre_formato", "lista_educativa")
-    dato_c     = plan.get("dato_contraintuitivo", "un dato sorprendente")
+    perfil     = plan.get("_perfil_narrador", "divulgador científico")
+    nombre_fmt = plan.get("_nombre_formato", "lista_explicativa_weird")
+    dato_w     = plan.get("dato_weird", "un dato sorprendente")
 
     for i, punto in enumerate(puntos):
         previo = textos[-1][-600:] if textos else ""
         if i == 0:
             extra = (f"Empieza EXACTAMENTE con: \"{plan['gancho']}\" y enseguida "
-                     f"INTEGRA el dato contraintuitivo '{dato_c}' como el detonante.")
+                     f"INTEGRA el dato weird '{dato_w}' como la revelación central del video.")
         elif i == len(puntos) - 1:
-            extra = ("Cierra con un cierre que sintetice y deje al espectador con "
-                     "una acción concreta para hoy. Vuelve a mencionar el dato "
-                     "contraintuitivo para reforzarlo.")
+            extra = ("Cierra con una síntesis que conecte los 5 puntos y deje al espectador "
+                     f"con una sensación de asombro. Vuelve a mencionar el dato weird '{dato_w}' "
+                     "para reforzarlo, pero con un ángulo nuevo.")
         else:
-            extra = (f"Conecta con el punto anterior y asegúrate de que el dato "
-                     f"contraintuitivo '{dato_c}' se mencione si encaja.")
+            extra = (f"Conecta con el punto anterior y menciona el dato weird '{dato_w}' "
+                     f"si encaja. AL FINAL DE ESTE PUNTO, usa un OPEN LOOP: deja una frase "
+                     f"intrigante que obligue a ver el siguiente punto.")
 
-        prompt = f"""Escribe el PUNTO {i+1} de {len(puntos)} de un documental educativo de psicología.
+        prompt = f"""Escribe el PUNTO {i+1} de {len(puntos)} de un documental científico "weird".
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FORMATO: {nombre_fmt.upper()}
 {formato}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-NARRADOR: {plan.get('protagonista', 'Daniel')} — {perfil}
+NARRADOR: {perfil}
 TEMA: {tema['angulo']}
-DATO CONTRAINTUITIVO: "{dato_c}"
+DATO WEIRD: "{dato_w}"
 SINOPSIS: {plan.get('resumen', '')}
 ÍNDICE COMPLETO: {indice}
 ESTE PUNTO: {punto.get('titulo', '')} → {punto.get('resumen', '')}
 {extra}
 {('CIERRE DEL PUNTO ANTERIOR: ' + previo) if previo else ''}
 
-REGLAS DE ORO (VALOR HUMANO Y ANTI-DEMONETIZACIÓN):
-1. 320-400 palabras exactas.
-2. Español neutro-mexicano, tono de autoridad pero accesible.
-3. ⚠️ INCLUYE UN MINI CASO DE ESTUDIO O ANÉCDOTA COTIDIANA: Para ilustrar el concepto, inventa una breve historia de alguien (ej. "Conocí a un paciente llamado Carlos que...").
-4. ⚠️ CIERRA CON UNA PREGUNTA RETÓRICA: Haz que el espectador reflexione (ej. "¿Te has dado cuenta de que tú también haces esto?").
-5. Incluye 1 estudio, autor o dato científico (real o plausible).
-6. El dato contraintuitivo debe sonar natural, no forzado.
-7. NO des consejos médicos directos. Usa "La evidencia sugiere...".
+REGLAS:
+- 320-400 palabras exactas
+- Español neutro-mexicano, tono de documental científico de alta gama
+- Cada punto debe tener: UN DATO CIENTÍFICO CONCRETO + UN EJEMPLO COTIDIANO + UNA EXPLICACIÓN BREVE
+- NUNCA des consejos médicos. NUNCA uses "debes hacer X". Solo "la ciencia dice que..."
+- Estilo narrativo: asombro documental (BBC / Nat Geo / Veritasium)
+- SHOWING not telling: describe escenas y mecanismos concretos
+- El dato weird debe sentirse como una revelación, no forzado
+- Sin listas, emojis, ni acotaciones
+- Los 5 puntos deben ser DIFERENTES entre sí
+
 Devuelve SOLO el texto del punto."""
         texto = None
         for intento in range(3):
@@ -712,13 +754,6 @@ def expandir_texto(titulo, texto_actual):
         if len(t.split()) > 150:
             return t
     return ""
-
-OUTROS = [
-    "Y hasta aquí llega el video de hoy. Si te aportó, suscríbete y activa la campanita. "
-    "Cuéntame en los comentarios: ¿cuál de estos puntos vas a aplicar primero?",
-    "Eso fue todo por hoy. Si llegaste hasta el final, déjame un like y suscríbete para "
-    "no perderte el siguiente. ¿Tú qué opinas? Te leo abajo.",
-]
 
 # =================================================================
 # SEGMENTOS
@@ -840,9 +875,12 @@ def reutilizar_imagen_flux(idx):
 # =================================================================
 # CLOUDFLARE FLUX
 # =================================================================
-ANTI_DEFORM = (", cinematic wide shot, professional lighting, highly detailed, "
-               "photorealistic, 8k, no text, no deformed faces, no mutated hands, "
-               "no extra limbs, sharp focus, professional composition")
+ANTI_DEFORM = (
+    ", cinematic wide shot, abstract scientific visualization, "
+    "glowing bioluminescent elements, minimalist dark aesthetic, highly detailed, 8k, "
+    "professional science documentary style, no realistic human faces, no realistic human bodies, "
+    "no deformed anatomy, no mutated hands, no extra limbs, no text, no words, clean and futuristic"
+)
 
 def generar_imagen_cloudflare(prompt_en, idx, intentos=3):
     if not USAR_IMAGENES_IA:
@@ -952,18 +990,21 @@ def planificar_visuales(segs, tema):
     for ini in range(0, len(segs), 15):
         lote = segs[ini:ini + 15]
         listado = "\n".join(f"{j+1}. {s['texto'][:230]}" for j, s in enumerate(lote))
-        prompt = f"""Eres director de fotografía de un canal de PSICOLOGÍA de élite (estilo
-documental educativo, autoridad intelectual).
+        prompt = f"""Eres director de fotografía de un canal de DIVULGACIÓN CIENTÍFICA de élite
+(estilo BBC / Nat Geo / Veritasium).
 
 Para CADA fragmento numerado devuelve UNA consulta corta (4-6 palabras, EN INGLÉS)
 para generar una imagen con Flux que ilustre visualmente ese fragmento.
 
-REGLAS:
-- Estilo: cinematográfico, profesional, oscuro-elegante, editorial
-- Prefiere: siluetas, manos, entornos, objetos simbólicos, escenarios
-- EVITA primeros planos de rostros (Flux los hace pero mejor evitarlos)
-- Ejemplos: "cinematic brain scan blue light", "person walking alone silhouette", "hands writing journal dark", "two people arguing office"
-- NUNCA incluyas: "text", "words", "letters", "caption"
+REGLAS CRÍTICAS:
+- Estilo: visualización científica abstracta, cinematográfica, oscura-elegante
+- Prefiere: células brillantes, neuronas, ADN abstracto, nebulosas, partículas,
+  microscopía artística, diagramas conceptuales
+- EVITA TOTALMENTE: rostros humanos, cuerpos humanos realistas, anatomía detallada
+- Ejemplos: "glowing neuron network dark", "abstract dna helix glowing",
+  "microscopic bacteria bioluminescent", "cosmic nebula purple dark",
+  "brain neurons firing abstract", "cell division macro glowing"
+- NUNCA incluyas: "text", "words", "letters", "person", "face", "human"
 
 Tema: {tema['tema']}
 Fragmentos:\n{listado}
@@ -978,58 +1019,9 @@ Responde SOLO JSON: {{"consultas": ["..."]}} con exactamente {len(lote)} element
             q = lista[j] if j < len(lista) and isinstance(lista[j], str) else ""
             q = " ".join(re.sub(r"[^a-zA-Z ]", " ", q).split()[:7])
             if len(q) < 10:
-                q = "cinematic dark moody professional educational scene"
+                q = "abstract scientific visualization glowing cells dark"
             out[ini + j] = q
     return out
-
-# =================================================================
-# APLICAR TEXTO OVERLAY
-# =================================================================
-def aplicar_texto_overlay(img_path, output_path, texto):
-    try:
-        with Image.open(img_path) as img:
-            if img.mode != "RGB":
-                img = img.convert("RGB")
-            draw = ImageDraw.Draw(img)
-            w, h = img.size
-
-            font = None
-            for path in [
-                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-            ]:
-                try:
-                    size = int(w * 0.08)
-                    font = ImageFont.truetype(path, size)
-                    break
-                except Exception:
-                    continue
-            if font is None:
-                font = ImageFont.load_default()
-
-            texto = texto.upper()
-            bb = draw.textbbox((0,0), texto, font=font)
-            lw = bb[2] - bb[0]
-            lh = bb[3] - bb[1]
-            x = (w - lw) // 2
-            y = int(h * 0.1)
-
-            overlay = Image.new("RGBA", img.size, (0,0,0,0))
-            od = ImageDraw.Draw(overlay)
-            pad = int(w * 0.02)
-            od.rectangle([x-pad, y-pad, x+lw+pad, y+lh+pad*2], fill=(0,0,0,200))
-            img = Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
-
-            draw = ImageDraw.Draw(img)
-            stroke_w = max(3, int(w * 0.005))
-            draw.text((x, y), texto, font=font, fill=(255, 215, 0),
-                      stroke_width=stroke_w, stroke_fill=(0,0,0))
-
-            img.save(output_path, "JPEG", quality=92)
-            return True
-    except Exception as e:
-        print(f"❌ Error overlay: {e}")
-        return False
 
 # =================================================================
 # RENDER
@@ -1098,13 +1090,12 @@ class RenderEscenas:
             fr = (fr.astype(np.float32) * f).astype(np.uint8)
         return fr
 
-def construir_escenas(segs, palabras_por_imagen):
+def construir_escenas(segs):
     esc = []
     for s in segs:
         n_imgs = max(1, round(s["dur_audio"] / SEG_ESCENA))
         dur_por_img = s["dur"] / n_imgs
         for k in range(n_imgs):
-            overlay_text = random.choice(palabras_por_imagen)
             esc.append({
                 "path": s["medios"][k % len(s["medios"])],
                 "inicio": s["inicio"] + k * dur_por_img,
@@ -1114,7 +1105,6 @@ def construir_escenas(segs, palabras_por_imagen):
                 "zin": random.random() < 0.65,
                 "ax": random.uniform(-1, 1),
                 "ay": random.uniform(-1, 1),
-                "overlay": overlay_text
             })
     return esc
 
@@ -1134,13 +1124,6 @@ def mezclar_audio(segs, total, fondo, extras=()):
     return CompositeAudioClip(capas).set_duration(total), clips
 
 def renderizar(escenas, total, audio, size, salida, sufijo=""):
-    for e in escenas:
-        if e.get("overlay"):
-            img_temp = e["path"]
-            img_out  = e["path"].replace(".jpg", f"_ovl_{random.randint(1,999)}.jpg")
-            if aplicar_texto_overlay(img_temp, img_out, e["overlay"]):
-                e["path"] = img_out
-
     render = RenderEscenas(escenas, size, total)
     video = VideoClip(render.frame, duration=total).set_audio(audio)
     temp_audio = f"temp_audio_final{sufijo}.m4a"
@@ -1253,7 +1236,7 @@ def crear_miniatura(img_path, texto, salida):
         return False
 
 # =================================================================
-# SEO ELITE (CURIOSITY GAP v3.2)
+# SEO ELITE (ACTUALIZADO v1.2)
 # =================================================================
 def _ascii_tag_yt(t):
     nfd = unicodedata.normalize('NFD', str(t))
@@ -1263,40 +1246,48 @@ def _ascii_tag_yt(t):
 
 def construir_tags(plan, tema, sugerencias):
     nombre_tema = _ascii_tag_yt(tema["tema"].replace("_", " "))
-
+    
+    # ⚡ 1. TAGS DE ALTA INTENCIÓN (Clickbait Ético)
     tags_ia = plan.get("tags", [])
     if isinstance(tags_ia, str):
         tags_ia = [x.strip() for x in tags_ia.split(",")]
-
-    exactos = list(tags_ia)[:5]
-
-    broad = ["psicologia", "estoicismo", "desarrollo personal",
-             "inteligencia emocional", "mentalidad", "neurociencia"]
-
+    
+    # ⚡ 2. TAGS BROAD (Los que te meten al algoritmo de ciencia general)
+    broad = [
+        "ciencia", "divulgacion cientifica", "datos curiosos", 
+        "curiosidades cientificas", "ciencia weird", "asombro cientifico",
+        "documental cientifico", "ciencia para todos", "misterios de la ciencia"
+    ]
+    
+    # ⚡ 3. TAGS DE CURIOUSITY GAP (Los que la gente realmente busca)
     curiosity_gap = [
-        f"la trampa de {nombre_tema}",
-        f"el error de {nombre_tema}",
-        f"por que tu cerebro hace {nombre_tema}",
-        f"lo que ocultan sobre {nombre_tema}",
-        f"la psicologia de {nombre_tema}",
+        f"que pasaria si {nombre_tema}",
+        f"por que {nombre_tema}",
+        f"lo que la ciencia oculta de {nombre_tema}",
+        f"tu cuerpo y {nombre_tema}",
+        f"tu cerebro y {nombre_tema}",
+        f"el secreto de {nombre_tema}",
     ]
-
+    
+    # ⚡ 4. TAGS LONG-TAIL (Búsquedas específicas de la audiencia)
     long_tail = [
-        f"psicologia {nombre_tema}",
-        f"estoicismo {nombre_tema}",
-        f"como {nombre_tema}",
-        f"que es {nombre_tema}",
+        f"ciencia {nombre_tema}",
+        f"datos curiosos de {nombre_tema}",
+        f"documental de {nombre_tema}",
+        f"explicacion cientifica de {nombre_tema}",
     ]
-
+    
+    # ⚡ 5. TAGS DE LA NUBE (Lo que la gente escribe en el buscador)
     preguntas = list(sugerencias)[:3]
     especificos_tema = list(tema["keywords"])[:3]
 
     todos, vistos = [], set()
-    for raw in exactos + curiosity_gap + long_tail + broad + preguntas + especificos_tema:
+    # Priorizamos los tags de alta intención primero
+    for raw in tags_ia + curiosity_gap + long_tail + broad + preguntas + especificos_tema:
         tag = _ascii_tag_yt(raw)
         if not tag or len(tag) < 2 or len(tag) > 40 or tag in vistos:
             continue
-        if any(x in tag for x in ("100 real", "veridico", "caso real", "cura")):
+        if any(x in tag for x in ("100 real", "veridico", "caso real", "cura", "remedio")):
             continue
         vistos.add(tag)
         todos.append(tag)
@@ -1312,11 +1303,9 @@ def construir_tags(plan, tema, sugerencias):
     return resultado
 
 def construir_hashtags(tema, plan):
-    base = ["#Psicologia", "#DesarrolloPersonal"]
+    base = ["#Ciencia", "#DivulgacionCientifica"]
     tema_hs = tema.get("hashtags", [])[:2]
-    extra = "#Estoicismo"
-    if "estoic" in tema["tema"].lower() or "estoic" in " ".join(plan.get("palabras_clave", [])).lower():
-        extra = "#MarcoAurelio"
+    extra = "#DatosCuriosos"
     hs = base + tema_hs + [extra]
     vistos = []
     for h in hs:
@@ -1327,10 +1316,10 @@ def construir_hashtags(tema, plan):
 def construir_descripcion(plan, tema, caps_ts, sugerencias, hashtags):
     kws = plan.get("palabras_clave", [])
     keyword_principal = kws[0] if kws else tema["tema"].replace("_", " ")
-    dato_c = plan.get("dato_contraintuitivo", "")
+    dato_w = plan.get("dato_weird", "")
     resumen = plan.get("resumen", "")
 
-    linea1 = f"{keyword_principal.title()}: {dato_c}." if dato_c else f"{keyword_principal.title()}: {resumen[:120]}"
+    linea1 = f"{keyword_principal.title()}: {dato_w}." if dato_w else f"{keyword_principal.title()}: {resumen[:120]}"
     linea2 = f"En este video te explico {plan.get('gancho', '')[:180]}"
 
     capitulos = "\n".join(f"{ts} {t}" for ts, t in caps_ts)
@@ -1348,11 +1337,16 @@ def construir_descripcion(plan, tema, caps_ts, sugerencias, hashtags):
         f"",
         (f"🔎 BÚSQUEDAS RELACIONADAS: {rel}" if rel else ""),
         f"",
-        f"📱 Sígueme en Facebook: https://www.facebook.com/profile.php?id=61593237382982",
-        f"",
+    ]
+
+    if FACEBOOK_LINK:
+        partes.append(f"📱 Sígueme en Facebook: {FACEBOOK_LINK}")
+        partes.append(f"")
+
+    partes += [
         f"📚 Otros videos que te pueden interesar:",
-        f"• Cómo recuperar tu dopamina → {CANAL_LINK}/videos",
-        f"• Estoicismo aplicado → {CANAL_LINK}/videos",
+        f"• Curiosidades de tu cuerpo → {CANAL_LINK}/videos",
+        f"• ¿Qué pasaría si...? → {CANAL_LINK}/videos",
     ]
 
     if ACTIVAR_DISCLOSURE_IA:
@@ -1511,25 +1505,25 @@ def generar_short_scripts(plan, tema):
         f"- {p.get('titulo','')}: {p.get('resumen','')}"
         for p in plan.get("puntos", [])
     )
-    prompt = f"""Basándote en este video largo de psicología, escribe 2 GUIONES
+    prompt = f"""Basándote en este video largo de divulgación científica, escribe 2 GUIONES
 para 2 Shorts de YouTube DIFERENTES entre sí. Cada short debe ser un RESUMEN
-PARAFRASEADO del video, cada uno enfocándose en un ÁNGULO DIFERENTE.
+PARAFRASEADO del video (NO copiar frases literales), cada uno enfocándose en un ÁNGULO DIFERENTE.
 
 VIDEO LARGO:
 - Tema: {plan.get('titulo_short', '')[:80]}
-- Dato contraintuitivo: {plan.get('dato_contraintuitivo', '')}
+- Dato weird: {plan.get('dato_weird', '')}
 - Sinopsis: {plan.get('resumen', '')[:250]}
 - Puntos clave:
 {puntos_lista}
 
 ━━━ SHORT 1 (ángulo: PROBLEMA/ADVERTENCIA) ━━━
-- Título: máx 55 chars, contiene el dato contraintuitivo o una advertencia.
-- Guion: 80-100 palabras. EMPIEZA CON UN PATTERN INTERRUPT.
+- Título: máx 55 chars, contiene el dato weird o una advertencia.
+- Guion: 80-100 palabras. EMPIEZA CON UN PATTERN INTERRUPT (ej: "Si haces esto, tu cuerpo reacciona así", "El 90% no sabe esto").
 - Hashtags: 4-5 hashtags específicos del short.
 
 ━━━ SHORT 2 (ángulo: SOLUCIÓN/PARADOJA) ━━━
-- Título: DIFERENTE al short 1, máx 55 chars, contiene una PARADOJA o SOLUCIÓN.
-- Guion: 80-100 palabras.
+- Título: DIFERENTE al short 1, máx 55 chars, contiene una PARADOJA o REVELACIÓN.
+- Guion: 80-100 palabras. Empieza con la paradoja, cierra con la revelación científica.
 - Hashtags: 4-5 hashtags DISTINTOS o parcialmente distintos al short 1.
 
 ━━━ REGLAS CRÍTICAS ━━━
@@ -1537,6 +1531,7 @@ VIDEO LARGO:
 2. Los 2 títulos deben ser claramente DIFERENTES en estructura y palabras.
 3. El guion NO debe incluir CTA de "suscríbete" — el bot lo agrega después.
 4. Los hashtags del short 1 y short 2 deben tener al menos 2 diferentes entre sí.
+5. NUNCA uses "debes hacer X para curar Y". Solo "la ciencia dice que...".
 
 Responde SOLO JSON:
 {{
@@ -1561,7 +1556,7 @@ Responde SOLO JSON:
             if not all(f in s for f in ("titulo", "guion", "hashtags")):
                 raise ValueError(f"{k} incompleto")
             if len(s["guion"].split()) < 50:
-                raise ValueError(f"{k} guion muy corto")
+                raise ValueError(f"{k} guion muy corto ({len(s['guion'].split())} palabras)")
         t1 = data["short1"]["titulo"].lower().strip()
         t2 = data["short2"]["titulo"].lower().strip()
         if t1 == t2:
@@ -1598,11 +1593,11 @@ def crear_short_con_guion(guion_texto, titulo_short, hashtags_short, fondo, indi
             ruta = reutilizar_imagen_flux(img_id)
             if not ruta:
                 ruta = generar_imagen_cloudflare(
-                    "cinematic dark psychology editorial scene", img_id
+                    "cinematic dark science abstract visualization", img_id
                 )
             if not ruta:
                 ruta = imagen_fallback_pexels(
-                    "cinematic dark psychology editorial", img_id
+                    "cinematic dark science abstract", img_id
                 )
             if not ruta:
                 ruta = imagen_fallback(img_id)
@@ -1625,20 +1620,16 @@ def crear_short_con_guion(guion_texto, titulo_short, hashtags_short, fondo, indi
 
     cta_texto = random.choice(CTA_SHORTS)
     cta = generar_audio(cta_texto, f"cta_{indice}", "conclusion")
-
-    palabras_overlay = ["DATO CLAVE", "ERROR MENTAL", "ESTUDIO", "CIENCIA"]
-    escenas = construir_escenas(segs, palabras_overlay)
-
+    escenas = construir_escenas(segs)
     extras, total_final = [], total
     if cta:
         d = duracion_audio(cta)
         extras.append(AudioFileClip(cta).set_start(total))
         ult = escenas[-1]
-        escenas.append({**ult, "inicio": total, "dur": d + 0.6, "fade": False, "overlay": "SUSCRÍBETE"})
+        escenas.append({**ult, "inicio": total, "dur": d + 0.6, "fade": False})
         total_final = total + d + 0.6
     audio, _ = mezclar_audio(segs, total_final, fondo, extras)
     print(f"   📊 Short {indice} total: {total_final:.1f}s")
-
     renderizar(escenas, total_final, audio, (1080, 1920), salida, sufijo=f"_s{indice}")
     return salida, total_final
 
@@ -1673,7 +1664,7 @@ def limpiar_temporales():
     for f in os.listdir("."):
         if f.startswith("temp_") or f in ("video_final.mp4", "short_1.mp4",
                                           "short_2.mp4", "short_final.mp4",
-                                          "miniatura.jpg", "subtitulos.srt") or "_ovl_" in f:
+                                          "miniatura.jpg", "subtitulos.srt"):
             try:
                 os.remove(f)
             except OSError:
@@ -1738,11 +1729,11 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧠 CÓDIGO MENTAL - BOT v3.3 (SEG_ESCENA=18s)")
+    print("🧬 CHISPAS INQUIETAS (CIENCIA WEIRD) - BOT v1.2")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
-    print(f"📤 1 Video Largo (8-12 min) + 2 Shorts | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
-    print(f"🛡️  Blindaje: Casos de Estudio + Overlays + Curiosity Gap SEO")
-    print(f"📂 Categoría YouTube: Educación (27)")
+    print(f"📤 1 Video Largo (8-12 min) + 2 Shorts ÚNICOS (35-42s) | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
+    print(f"🛡️  Fallback: Cloudflare → Pool Flux → Pexels → Gradiente")
+    print(f"📂 Categoría YouTube: Ciencia y Tecnología (28)")
     print("=" * 70)
 
     actualizar_rendimiento(youtube, estado)
@@ -1754,7 +1745,7 @@ def main():
 
     sugerencias = list(dict.fromkeys(
         sugerencias_youtube(tema["seed"]) +
-        sugerencias_youtube("psicología " + tema["keywords"][0])
+        sugerencias_youtube("ciencia " + tema["keywords"][0])
     ))[:10]
 
     fondo = seleccionar_fondo(estado)
@@ -1766,7 +1757,7 @@ def main():
             plan = generar_plan(tema, contexto, sugerencias, titulos_previos, formato, perfil)
             if plan.get("palabras_clave") and tema_ya_usado(" ".join(map(str, plan["palabras_clave"]))):
                 raise ValueError("tema repetido")
-            titulo = elegir_titulo(plan["titulos"], plan.get("dato_contraintuitivo", ""))
+            titulo = elegir_titulo(plan["titulos"], plan.get("dato_weird", ""))
             if not titulo:
                 raise ValueError("sin título válido")
             plan["_formato_instruccion"] = formato["instruccion"]
@@ -1782,7 +1773,7 @@ def main():
         sys.exit(1)
 
     print(f"📌 Título: {titulo}")
-    print(f"🎯 Dato contraintuitivo: {plan.get('dato_contraintuitivo', 'N/A')}")
+    print(f"🎯 Dato weird: {plan.get('dato_weird', 'N/A')}")
 
     puntos_txt = generar_puntos(plan, tema, contexto)
     n_puntos = len(puntos_txt)
@@ -1830,7 +1821,7 @@ def main():
     stats = {"flux": 0, "pool": 0, "pexels": 0, "gradient": 0}
     for i, s in enumerate(segs):
         n_imgs = max(1, round(s["dur_audio"] / SEG_ESCENA))
-        prompt_visual = prompts_visuales[i] if i < len(prompts_visuales) else "cinematic dark moody professional scene"
+        prompt_visual = prompts_visuales[i] if i < len(prompts_visuales) else "abstract scientific visualization glowing cells dark"
         print(f"🖼️ {i+1}/{len(segs)} [{s['etapa']}] '{prompt_visual}' x{n_imgs}")
         medios = []
         for k in range(n_imgs):
@@ -1880,7 +1871,7 @@ def main():
     print("   " + "\n   ".join(descripcion.split("\n")[:2]))
 
     portada = elegir_texto_portada(plan.get("palabras_portada"), titulo)
-    escena_mini = str(plan.get("miniatura_escena", "professional psychology cinematic dark"))
+    escena_mini = str(plan.get("miniatura_escena", "abstract science cinematic dark"))
     base_mini = generar_imagen_cloudflare(escena_mini + " for thumbnail", "thumb")
     if not base_mini:
         base_mini = reutilizar_imagen_flux("thumb_mini")
@@ -1890,8 +1881,7 @@ def main():
         base_mini = imagen_fallback("thumb_mini")
     miniatura = "miniatura.jpg" if crear_miniatura(base_mini, portada, "miniatura.jpg") else None
 
-    palabras_overlay_largo = ["DATO CLAVE", "ESTUDIO CIENTÍFICO", "ERROR MENTAL", "EVIDENCIA", "LA CIENCIA DICE"]
-    escenas = construir_escenas(segs, palabras_overlay_largo)
+    escenas = construir_escenas(segs)
     audio, _ = mezclar_audio(segs, total, fondo)
     print("🎬 Renderizando video largo...")
     renderizar(escenas, total, audio, (W, H), "video_final.mp4", sufijo="_largo")
@@ -1901,11 +1891,6 @@ def main():
         print(f"🕖 Video Largo: {slot_largo:%Y-%m-%d %H:%M} CDMX")
         print(f"📱 Short 1:    {slot_short1:%Y-%m-%d %H:%M} CDMX")
         print(f"📱 Short 2:    {slot_short2:%Y-%m-%d %H:%M} CDMX")
-        dias = {slot_largo.date(), slot_short1.date(), slot_short2.date()}
-        if len(dias) != 1:
-            print(f"⚠️ ADVERTENCIA: slots en días distintos: {dias}")
-        else:
-            print(f"✅ Los 3 slots están el mismo día: {slot_largo.date()}")
     else:
         slot_largo = slot_short1 = slot_short2 = None
         print("📤 Publicación inmediata")
@@ -1993,8 +1978,6 @@ def main():
             print(f"📊 RESUMEN SHORTS: {len(shorts_creados)}/2 creados")
             for nombre, sid in shorts_creados:
                 print(f"   ✅ {nombre}: https://youtu.be/{sid}")
-            if len(shorts_creados) < 2:
-                print(f"   ⚠️ Faltan {2 - len(shorts_creados)} short(s).")
             print("=" * 70)
 
     ahora = datetime.now(TZ).isoformat()
@@ -2003,7 +1986,7 @@ def main():
     estado["videos"].append({
         "id": vid, "titulo": titulo, "tema": tema["tema"],
         "formato": formato["nombre"], "perfil": perfil,
-        "dato_contraintuitivo": plan.get("dato_contraintuitivo"),
+        "dato_weird": plan.get("dato_weird"),
         "duracion_min": round(total / 60, 1),
         "fecha": ahora,
     })
