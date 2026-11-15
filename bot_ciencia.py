@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.5 ELITE PREMIUM
-Cambios v1.5:
-  - SEO Élite: puntuación de títulos de 4 capas, 5 bloques de tags, descripción con hook
-  - 8 títulos por plan con estructura fija por categoría
-  - 5 opciones de miniatura por video
-v1.4:
-  - Fix imágenes: dos prompts por segmento (Flux abstracto + Pexels concreto)
-  - Permite siluetas/manos/texturas en Flux (sigue sin rostros completos)
-v1.3:
-  - SEG_ESCENA=18s (ahorro ~23% neuronas Cloudflare)
+CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.6 SAYAYIN
+v1.6 - MINIATURAS ÉLITE: Rostro humano con emoción + texto gigante + composición profesional
+  - Sistema de 5 estilos rotativos (Shock, Revelación, Miedo, Duda, Curiosidad)
+  - Rostro real de Pexels (55-60% izquierda) + texto (40-45% derecha)
+  - Paleta agresiva con stroke negro grueso + glow neón
+  - Elemento de urgencia (flecha roja, círculo, exclamación)
+  - Selección inteligente de palabras de alto impacto
+v1.5 - SEO élite 4 capas + 5 bloques tags + descripción con hook 2 líneas
+v1.4 - Fix imágenes: dos prompts por segmento (Flux abstracto + Pexels concreto)
+v1.3 - SEG_ESCENA=18s
 """
 import asyncio
 import bisect
@@ -474,7 +474,7 @@ def elegir_tema(estado, youtube):
     return elegido
 
 # =================================================================
-# TÍTULOS Y MINIATURAS (SEO ÉLITE v1.5)
+# TÍTULOS Y MINIATURAS (SEO ÉLITE v1.6)
 # =================================================================
 GANCHOS = [
     "nunca", "nadie", "jamás", "nadie te", "nadie sabe", "nadie te dijo",
@@ -517,7 +517,6 @@ def limpiar_titulo(t):
 
 def puntuar_titulo(t, dato_weird=""):
     s, n, tl = 0, len(t), t.lower()
-
     if 45 <= n <= 68:
         s += 6
     elif 40 <= n < 45 or 68 < n <= 75:
@@ -592,10 +591,11 @@ def elegir_titulo(candidatos, dato_weird=""):
     return puntuados[0][1][:100]
 
 def elegir_texto_portada(opciones, titulo):
+    """v1.6: Prioriza palabras de alto impacto para miniaturas."""
     pt = set(re.findall(r"\w+", titulo.lower()))
     mejor = None
-    fallbacks_virales = ["TU CUERPO", "TU CEREBRO", "TE MIENTEN", "NUNCA HAGAS",
-                         "EL ERROR", "OCULTAN", "¿QUÉ PASARÍA?", "80 VECES"]
+    fallbacks_virales = ["TU CUERPO", "TE MIENTEN", "NUNCA HAGAS", "EL ERROR",
+                         "OCULTAN", "80 VECES", "¿QUÉ PASARÍA?", "TU CEREBRO"]
     for o in opciones or []:
         if not isinstance(o, str):
             continue
@@ -606,7 +606,7 @@ def elegir_texto_portada(opciones, titulo):
         solape = len({x.lower() for x in w} & pt) / len(w)
         sc = (3 if len(w) in (2, 3) else 1) - 2 * solape + (1 if "?" in o else 0)
         if any(x in o for x in ["CUERPO", "CEREBRO", "MIENTEN", "OCULTAN",
-                                 "NUNCA", "ERROR", "ADN", "PASARÍA"]):
+                                 "NUNCA", "ERROR", "ADN", "PASARÍA", "VECES"]):
             sc += 5
         if mejor is None or sc > mejor[0]:
             mejor = (sc, o)
@@ -615,7 +615,7 @@ def elegir_texto_portada(opciones, titulo):
     return mejor[1]
 
 # =================================================================
-# GENERACIÓN DE CONTENIDO (SEO ÉLITE v1.5)
+# GENERACIÓN DE CONTENIDO
 # =================================================================
 ESQUEMA_PLAN = """{
  "titulos": ["8 títulos de 45-68 caracteres con ESTRUCTURA DISTINTA. OBLIGATORIO: AL MENOS 2 deben incluir el dato_weird literal o parafraseado. Cada título debe usar UNA de estas 8 estructuras (una por título): (1) 'Lo que TU [cuerpo/cerebro] hace cuando [acción cotidiana]', (2) 'Por qué NUNCA debes [acción común]', (3) 'El [dato] que la ciencia oculta sobre [tema]', (4) 'Tu [órgano] te está mintiendo: el error de [X]', (5) '[Número] cosas que tu cuerpo hace mientras [acción]', (6) 'Si [situación cotidiana], NUNCA [acción] (la ciencia lo explica)', (7) '[Pregunta directa sobre el tema]?', (8) 'El secreto de [proceso biológico/cósmico] que nadie menciona'"],
@@ -1166,7 +1166,7 @@ def renderizar(escenas, total, audio, size, salida, sufijo=""):
     return salida
 
 # =================================================================
-# MINIATURA
+# MINIATURAS ÉLITE v1.6 (ROSTRO + TEXTO + COMPOSICIÓN)
 # =================================================================
 def obtener_fuente(size):
     os.makedirs("fonts", exist_ok=True)
@@ -1187,6 +1187,146 @@ def obtener_fuente(size):
             continue
     return ImageFont.load_default()
 
+def buscar_rostro_emocional_pexels(query_base="shocked face dark"):
+    """
+    v1.6: Busca una foto de rostro humano con expresión emocional fuerte.
+    Prueba 5 queries distintas hasta encontrar una que coincida con el tema.
+    """
+    if not PEXELS_API_KEY:
+        return None
+
+    queries = [
+        "shocked man face dark",
+        "surprised woman portrait dark",
+        "scared face low light",
+        "person looking amazed",
+        "worried face closeup dark",
+        "terrified expression face",
+        "confused face portrait",
+        "curious person face dark",
+    ]
+    if query_base:
+        queries = [query_base + " face portrait dark"] + queries
+
+    random.shuffle(queries)
+    for q in queries[:6]:
+        try:
+            data = pexels_get(
+                "https://api.pexels.com/v1/search",
+                {"query": q, "orientation": "portrait", "size": "large",
+                 "per_page": 8, "page": 1}
+            )
+            fotos = (data or {}).get("photos", [])
+            if not fotos:
+                continue
+            # Filtrar fotos que tengan buen tamaño y no estén usadas
+            candidatas = [
+                f for f in fotos
+                if f["src"]["large2x"] not in USADOS_PEXELS
+                and f.get("width", 0) > 1000
+            ]
+            if not candidatas:
+                continue
+            foto = random.choice(candidatas[:4])
+            url = foto["src"]["large2x"]
+            ruta = f"temp_thumb_rostro_{random.randint(1000,9999)}.jpg"
+            if descargar(url, ruta, 15 * 1024 * 1024):
+                USADOS_PEXELS.add(url)
+                print(f"   👤 Rostro emocional encontrado: {q}")
+                return ruta
+        except Exception as e:
+            print(f"   ⚠️ Query '{q}': {e}")
+            continue
+    return None
+
+def buscar_cuerpo_emocional_pexels(query_base=""):
+    """v1.6: Fallback si no hay rostros — busca cuerpo/manos con emoción."""
+    if not PEXELS_API_KEY:
+        return None
+
+    queries = [
+        "person touching head stressed",
+        "hands touching skin dramatic",
+        "silhouette person standing dark",
+        "body closeup skin texture",
+        "hand touching cold ice",
+        "person shivering cold",
+    ]
+    if query_base:
+        queries = [query_base + " person body dark"] + queries
+
+    random.shuffle(queries)
+    for q in queries[:5]:
+        try:
+            data = pexels_get(
+                "https://api.pexels.com/v1/search",
+                {"query": q, "orientation": "landscape", "size": "large",
+                 "per_page": 8, "page": 1}
+            )
+            fotos = (data or {}).get("photos", [])
+            if not fotos:
+                continue
+            candidatas = [f for f in fotos if f["src"]["large2x"] not in USADOS_PEXELS]
+            if not candidatas:
+                continue
+            foto = random.choice(candidatas[:4])
+            url = foto["src"]["large2x"]
+            ruta = f"temp_thumb_cuerpo_{random.randint(1000,9999)}.jpg"
+            if descargar(url, ruta, 15 * 1024 * 1024):
+                USADOS_PEXELS.add(url)
+                print(f"   🖐️ Cuerpo emocional encontrado: {q}")
+                return ruta
+        except Exception as e:
+            print(f"   ⚠️ Query '{q}': {e}")
+            continue
+    return None
+
+def elegir_estilo_miniatura():
+    """v1.6: 5 estilos rotativos probados."""
+    estilos = [
+        {
+            "nombre": "shock_rojo",
+            "color_texto": (255, 255, 255),
+            "color_acento": (255, 30, 30),
+            "stroke": (0, 0, 0),
+            "elemento": "flecha_roja",
+            "pos_texto": "derecha",
+        },
+        {
+            "nombre": "revelacion_amarillo",
+            "color_texto": (255, 220, 0),
+            "color_acento": (255, 255, 255),
+            "stroke": (0, 0, 0),
+            "elemento": "circulo",
+            "pos_texto": "derecha",
+        },
+        {
+            "nombre": "miedo_cyan",
+            "color_texto": (0, 255, 255),
+            "color_acento": (255, 255, 255),
+            "stroke": (0, 0, 0),
+            "elemento": "ninguno",
+            "pos_texto": "derecha",
+        },
+        {
+            "nombre": "duda_blanco",
+            "color_texto": (255, 255, 255),
+            "color_acento": (255, 140, 0),
+            "stroke": (0, 0, 0),
+            "elemento": "exclamacion",
+            "pos_texto": "derecha",
+        },
+        {
+            "nombre": "curiosidad_naranja",
+            "color_texto": (255, 140, 0),
+            "color_acento": (255, 255, 0),
+            "stroke": (0, 0, 0),
+            "elemento": "flecha_roja",
+            "pos_texto": "derecha",
+        },
+    ]
+    return random.choice(estilos)
+
 def dividir_lineas(palabras):
     if len(palabras) <= 2:
         return palabras[:]
@@ -1198,65 +1338,177 @@ def dividir_lineas(palabras):
             mejor = (m, [a, b])
     return mejor[1]
 
-def crear_miniatura(img_path, texto, salida):
+def crear_miniatura_v16(img_rostro_path, texto, salida, estilo=None):
+    """
+    v1.6: Composición profesional con rostro a la izquierda + texto a la derecha.
+    - Rostro ocupa 55-60% del ancho
+    - Texto ocupa 40-45% del ancho
+    - Stroke negro grueso + glow neón
+    - Elemento de urgencia (flecha/círculo/exclamación)
+    """
     TW, TH = 1280, 720
+    estilo = estilo or elegir_estilo_miniatura()
+
     try:
-        img = Image.open(img_path).convert("RGB") if img_path else Image.new("RGB", (TW, TH), (10, 10, 20))
-        img = ImageOps.fit(img, (TW, TH), Image.LANCZOS)
-        img = ImageEnhance.Contrast(img).enhance(1.45)
-        img = ImageEnhance.Color(img).enhance(1.35)
-        img = ImageEnhance.Sharpness(img).enhance(2.0)
+        # ═══ 1. Fondo: rostro o gradiente ═══
+        if img_rostro_path and os.path.exists(img_rostro_path):
+            img = Image.open(img_rostro_path).convert("RGB")
+            # Si es vertical, recortar; si es horizontal, ajustar
+            if img.width < img.height:
+                # Vertical: ocupar 60% izquierdo
+                img_rostro = ImageOps.fit(
+                    img,
+                    (int(TW * 0.60), TH),
+                    Image.LANCZOS,
+                    centering=(0.5, 0.3)  # prioriza parte superior (cara)
+                )
+                img = Image.new("RGB", (TW, TH), (5, 5, 15))
+                img.paste(img_rostro, (0, 0))
+            else:
+                # Horizontal: fit completo y luego dividir
+                img = ImageOps.fit(img, (TW, TH), Image.LANCZOS)
+        else:
+            # Sin rostro: fondo abstracto oscuro
+            img = Image.new("RGB", (TW, TH), (8, 10, 20))
+            for y in range(TH):
+                c = (int(5 + 20 * y / TH), int(10 + 25 * y / TH), int(20 + 35 * y / TH))
+                ImageDraw.Draw(img).line([(0, y), (TW, y)], fill=c)
+
+        # ═══ 2. Filtros de alto contraste ═══
+        img = ImageEnhance.Contrast(img).enhance(1.5)
+        img = ImageEnhance.Color(img).enhance(1.3)
+        img = ImageEnhance.Sharpness(img).enhance(2.2)
         img = ImageEnhance.Brightness(img).enhance(0.95)
 
+        # ═══ 3. Gradiente de fusión (izquierda visible, derecha oscurecida) ═══
         grad = Image.new("L", (TW, TH), 0)
         gd = ImageDraw.Draw(grad)
+        # La imagen se oscurece progresivamente hacia la derecha
+        # (para que el texto resalte)
         for x in range(TW):
-            gd.line([(x, 0), (x, TH)], fill=int(240 * max(0, 1 - x / (TW * 0.65)) ** 1.6))
+            alpha = int(255 * max(0, min(1, (x / TW - 0.35) / 0.40)))
+            gd.line([(x, 0), (x, TH)], fill=alpha)
         img = Image.composite(Image.new("RGB", (TW, TH), (0, 0, 0)), img, grad)
-        arr = np.asarray(img, dtype=np.float32) * vignette((TW, TH), 1.0, 0.40)
+
+        # ═══ 4. Vignette final ═══
+        arr = np.asarray(img, dtype=np.float32) * vignette((TW, TH), 1.0, 0.50)
         img = Image.fromarray(arr.astype(np.uint8)).convert("RGBA")
 
-        lineas = dividir_lineas(texto.upper().split()[:4])
-        max_w, max_h = int(TW * 0.58), int(TH * 0.78)
+        # ═══ 5. Texto a la derecha (40-45% del ancho) ═══
+        texto_upper = texto.upper()
+        palabras = texto_upper.split()[:4]
+        lineas = dividir_lineas(palabras)
 
-        for size in range(150, 60, -6):
+        # Zona de texto: 45% derecho de la imagen
+        x_inicio = int(TW * 0.55)
+        max_w_texto = TW - x_inicio - 40
+        max_h_texto = int(TH * 0.75)
+
+        # Buscar tamaño de fuente óptimo
+        size_final = 60
+        for size in range(140, 55, -6):
             font = obtener_fuente(size)
             cajas = [font.getbbox(l) for l in lineas]
-            alto = sum(b[3] - b[1] for b in cajas) + 18 * (len(lineas) - 1)
-            if max(b[2] - b[0] for b in cajas) <= max_w and alto <= max_h:
+            ancho_max = max(b[2] - b[0] for b in cajas)
+            alto_total = sum(b[3] - b[1] for b in cajas) + 18 * (len(lineas) - 1)
+            if ancho_max <= max_w_texto and alto_total <= max_h_texto:
+                size_final = size
                 break
 
-        acento = random.choice([(255, 220, 0), (255, 50, 50), (255, 140, 0), (255, 255, 255)])
-        y = (TH - alto) // 2 + 10
-        pos = []
+        font = obtener_fuente(size_final)
+        cajas = [font.getbbox(l) for l in lineas]
+        alto_total = sum(b[3] - b[1] for b in cajas) + 18 * (len(lineas) - 1)
+
+        # Posición vertical centrada
+        y = (TH - alto_total) // 2
+        pos_lineas = []
         for l, b in zip(lineas, cajas):
-            pos.append((l, 60, y - b[1]))
+            ancho_l = b[2] - b[0]
+            x = x_inicio + (max_w_texto - ancho_l) // 2
+            pos_lineas.append((l, x, y - b[1]))
             y += (b[3] - b[1]) + 18
 
+        # ═══ 6. Glow neón detrás del texto ═══
         glow = Image.new("RGBA", (TW, TH), (0, 0, 0, 0))
         gdraw = ImageDraw.Draw(glow)
-        for l, x, yy in pos:
-            gdraw.text((x, yy), l, font=font, fill=acento + (255,),
-                       stroke_width=10, stroke_fill=acento + (255,))
-        img = Image.alpha_composite(img, glow.filter(ImageFilter.GaussianBlur(24)))
+        for l, x, yy in pos_lineas:
+            gdraw.text((x, yy), l, font=font,
+                       fill=estilo["color_acento"] + (255,),
+                       stroke_width=14,
+                       stroke_fill=estilo["color_acento"] + (255,))
+        img = Image.alpha_composite(img, glow.filter(ImageFilter.GaussianBlur(22)))
 
+        # ═══ 7. Texto con stroke negro grueso ═══
         draw = ImageDraw.Draw(img)
-        borde = max(7, size // 20)
-        for i, (l, x, yy) in enumerate(pos):
-            color = acento if (i == len(pos) - 1) else (255, 255, 255)
-            draw.text((x, yy), l, font=font, fill=color + (255,),
-                      stroke_width=borde, stroke_fill=(0, 0, 0, 255))
+        borde = max(8, size_final // 14)
+        for i, (l, x, yy) in enumerate(pos_lineas):
+            color = estilo["color_acento"] if (i == len(pos_lineas) - 1) else estilo["color_texto"]
+            draw.text(
+                (x, yy), l, font=font,
+                fill=color + (255,),
+                stroke_width=borde,
+                stroke_fill=estilo["stroke"] + (255,)
+            )
 
+        # ═══ 8. Elemento de urgencia (flecha, círculo, exclamación) ═══
+        elem = estilo.get("elemento", "ninguno")
+        if elem == "flecha_roja":
+            # Flecha roja apuntando al texto o al rostro
+            ax, ay = int(TW * 0.52), int(TH * 0.85)
+            draw.polygon([
+                (ax, ay),
+                (ax + 80, ay - 40),
+                (ax + 80, ay - 20),
+                (ax + 140, ay - 20),
+                (ax + 140, ay + 20),
+                (ax + 80, ay + 20),
+                (ax + 80, ay + 40),
+            ], fill=(255, 30, 30, 255))
+        elif elem == "circulo":
+            # Círculo rojo alrededor del rostro o texto
+            cx, cy = int(TW * 0.28), int(TH * 0.45)
+            r = 140
+            draw.ellipse(
+                [(cx - r, cy - r), (cx + r, cy + r)],
+                outline=(255, 30, 30, 255),
+                width=12
+            )
+        elif elem == "exclamacion":
+            # Signos de exclamación gigantes
+            font_exc = obtener_fuente(int(size_final * 1.5))
+            draw.text(
+                (int(TW * 0.50), int(TH * 0.08)),
+                "!!!",
+                font=font_exc,
+                fill=(255, 220, 0, 255),
+                stroke_width=10,
+                stroke_fill=(0, 0, 0, 255)
+            )
+
+        # ═══ 9. Guardar con calidad adaptativa ═══
         rgb = img.convert("RGB")
         for q in (92, 87, 82, 76, 70):
             rgb.save(salida, "JPEG", quality=q, optimize=True)
             if os.path.getsize(salida) < 1_900_000:
                 break
-        print(f"✅ Miniatura: '{' / '.join(lineas)}' ({size}px)")
+
+        print(f"✅ Miniatura v1.6 [{estilo['nombre']}]: '{' / '.join(lineas)}' ({size_final}px)")
         return True
+
     except Exception as e:
-        print(f"❌ Error miniatura: {e}")
-        return False
+        print(f"❌ Error miniatura v1.6: {e}")
+        traceback.print_exc()
+        # Fallback: crear miniatura simple
+        try:
+            img = Image.new("RGB", (TW, TH), (10, 15, 25))
+            draw = ImageDraw.Draw(img)
+            font = obtener_fuente(120)
+            draw.text((60, TH // 2 - 60), texto.upper()[:20], font=font,
+                     fill=(255, 255, 0), stroke_width=10, stroke_fill=(0, 0, 0))
+            img.save(salida, "JPEG", quality=88)
+            return True
+        except Exception:
+            return False
 
 # =================================================================
 # SEO ELITE (5 BLOQUES DE TAGS)
@@ -1750,10 +2002,10 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧬 CHISPAS INQUIETAS - BOT v1.5 ELITE PREMIUM")
+    print("🧬 CHISPAS INQUIETAS - BOT v1.6 SAYAYIN")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
     print(f"📤 1 Video Largo + 2 Shorts | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
-    print(f"🎯 v1.5: SEO 4 capas + 5 bloques tags + imágenes concretas")
+    print(f"🎯 v1.6: MINIATURAS ÉLITE con rostro + texto + composición")
     print("=" * 70)
 
     actualizar_rendimiento(youtube, estado)
@@ -1893,16 +2145,48 @@ def main():
     print(f"📝 Descripción (primeras 2 líneas):")
     print("   " + "\n   ".join(descripcion.split("\n")[:2]))
 
+    # ═══════════════════════════════════════════════════════════════
+    # MINIATURA v1.6: rostro emocional + texto + composición
+    # ═══════════════════════════════════════════════════════════════
+    print("🖼️  Buscando rostro emocional para miniatura...")
     portada = elegir_texto_portada(plan.get("palabras_portada"), titulo)
-    escena_mini = str(plan.get("miniatura_escena", "abstract science cinematic dark"))
-    base_mini = generar_imagen_cloudflare(escena_mini + " for thumbnail", "thumb")
-    if not base_mini:
-        base_mini = reutilizar_imagen_flux("thumb_mini")
-    if not base_mini:
-        base_mini = imagen_fallback_pexels(escena_mini + " portrait", "thumb_mini")
-    if not base_mini:
-        base_mini = imagen_fallback("thumb_mini")
-    miniatura = "miniatura.jpg" if crear_miniatura(base_mini, portada, "miniatura.jpg") else None
+    print(f"   📝 Texto de portada elegido: '{portada}'")
+
+    # Estrategia de 3 niveles para la miniatura
+    img_miniatura = None
+    miniatura_ok = False
+
+    # Nivel 1: Rostro emocional de Pexels
+    img_miniatura = buscar_rostro_emocional_pexels(tema["tema"] + " person face")
+    if img_miniatura:
+        miniatura_ok = crear_miniatura_v16(img_miniatura, portada, "miniatura.jpg")
+        if miniatura_ok:
+            print("   ✅ Miniatura con ROSTRO emocional generada")
+
+    # Nivel 2: Cuerpo/manos emocionales
+    if not miniatura_ok:
+        print("   🔄 Sin rostro. Buscando cuerpo/manos emocionales...")
+        img_miniatura = buscar_cuerpo_emocional_pexels(tema["tema"])
+        if img_miniatura:
+            miniatura_ok = crear_miniatura_v16(img_miniatura, portada, "miniatura.jpg")
+            if miniatura_ok:
+                print("   ✅ Miniatura con CUERPO emocional generada")
+
+    # Nivel 3: Flux (fallback visual abstracto)
+    if not miniatura_ok:
+        print("   🔄 Pexels sin resultados. Usando Flux abstracto...")
+        escena_mini = str(plan.get("miniatura_escena", "abstract science cinematic dark"))
+        base_mini = generar_imagen_cloudflare(escena_mini + " for thumbnail", "thumb")
+        if not base_mini:
+            base_mini = reutilizar_imagen_flux("thumb_mini")
+        if not base_mini:
+            base_mini = imagen_fallback("thumb_mini")
+        miniatura_ok = crear_miniatura_v16(base_mini, portada, "miniatura.jpg")
+
+    miniatura = "miniatura.jpg" if miniatura_ok else None
+    if not miniatura:
+        print("   ⚠️ No se pudo generar miniatura. Se subirá sin miniatura.")
+    # ═══════════════════════════════════════════════════════════════
 
     escenas = construir_escenas(segs)
     audio, _ = mezclar_audio(segs, total, fondo)
