@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.3 (SEG_ESCENA=18s)
-v1.3 - SEG_ESCENA pasa de 14.0 → 18.0 segundos (ahorro ~23% de neuronas Cloudflare)
-v1.2 - SEO Curiosity Gap + Blindaje Anti-Demonetización
-v1.1 - Fix nombres JSON + estructura robusta
+CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.5 ELITE PREMIUM
+Cambios v1.5:
+  - SEO Élite: puntuación de títulos de 4 capas, 5 bloques de tags, descripción con hook
+  - 8 títulos por plan con estructura fija por categoría
+  - 5 opciones de miniatura por video
+v1.4:
+  - Fix imágenes: dos prompts por segmento (Flux abstracto + Pexels concreto)
+  - Permite siluetas/manos/texturas en Flux (sigue sin rostros completos)
+v1.3:
+  - SEG_ESCENA=18s (ahorro ~23% neuronas Cloudflare)
 """
 import asyncio
 import bisect
@@ -62,12 +68,11 @@ PLAYLIST_ID        = os.getenv("YOUTUBE_PLAYLIST_ID", "")
 CANAL_LINK    = "https://www.youtube.com/@cienciaweirdoficial"
 FACEBOOK_LINK = os.getenv("FACEBOOK_LINK", "")
 
-# ⚡ Nombres sincronizados con el repositorio
 ESTADO_FILE  = "estado_musica.json"
 TITULOS_FILE = "titulos_publicados.json"
 TEMAS_FILE   = "temas_shorts.json"
 
-CATEGORY_ID = "28"  # Ciencia y Tecnología
+CATEGORY_ID = "28"
 
 DURACION_MINIMA_SEGUNDOS = 480
 DURACION_MAXIMA_SEGUNDOS = 720
@@ -78,10 +83,7 @@ SHORT_CONTENT_MIN = 28
 SHORT_CONTENT_MAX = 36
 
 SEG_MAX_PALABRAS = 45
-
-# ⚡ v1.3: 18 segundos por imagen (antes 14) → ahorro ~23% de Cloudflare
 SEG_ESCENA       = 18.0
-
 W, H, FPS        = 1920, 1080, 24
 VOL_FONDO        = 0.10
 USAR_IMAGENES_IA = os.getenv("USAR_IMAGENES_IA", "true").lower() == "true"
@@ -130,7 +132,7 @@ OUTROS = [
 ]
 
 # =================================================================
-# TEMAS — CIENCIA WEIRD (20 TEMAS)
+# TEMAS
 # =================================================================
 TEMAS = [
     {"tema": "flema_sistema_inmune", "seed": "flema sistema inmune ciencia",
@@ -472,17 +474,25 @@ def elegir_tema(estado, youtube):
     return elegido
 
 # =================================================================
-# TÍTULOS Y MINIATURAS
+# TÍTULOS Y MINIATURAS (SEO ÉLITE v1.5)
 # =================================================================
 GANCHOS = [
-    "nunca", "nadie", "jamás", "prohibido", "secreto", "verdad",
-    "ocultan", "te miente", "tu cuerpo", "tu cerebro", "tu adn",
-    "lo que pasa", "qué pasaría", "por qué", "cómo", "si ",
-    "cuando", "5 ", "7 ", "3 ", "?", "!",
-    "lo que tu cuerpo", "lo que tu cerebro", "lo que nadie te dice",
-    "el error de tu cuerpo", "la mentira de tu cerebro", "señales de que",
-    "el dato que", "la ciencia revela", "lo que ocultan los estudios",
-    "no deberías", "nunca hagas", "nadie sabe por qué",
+    "nunca", "nadie", "jamás", "nadie te", "nadie sabe", "nadie te dijo",
+    "prohibido", "prohibieron", "secreto", "oculto", "ocultan",
+    "verdad", "la verdad", "te miente", "te están mintiendo",
+    "tu cuerpo", "tu cerebro", "tu adn", "tu sangre", "tu piel",
+    "lo que tu cuerpo", "lo que tu cerebro", "lo que tu adn",
+    "por qué tu cuerpo", "por qué tu cerebro",
+    "el error de", "la mentira de", "la trampa de", "el engaño de",
+    "te sabotea", "te destruye", "te está matando", "te envejece",
+    "lo que callan", "lo que no te dicen", "lo que esconden",
+    "5 ", "7 ", "3 ", "10 ", "12 ", "24 ", "100 ", "80 ",
+    "qué pasaría", "qué pasa si", "por qué", "cómo", "qué hay",
+    "si ", "cuando", "?", "!",
+    "ahora", "hoy", "mañana", "en 24 horas", "por 24 horas",
+    "nunca hagas", "nunca debes", "deja de", "evita", "no hagas",
+    "la ciencia revela", "la ciencia oculta", "los estudios dicen",
+    "los científicos", "el dato que", "la prueba de",
 ]
 PROHIBIDAS = [
     "testimonio real", "caso real", "100% real", "verídico", "comprobado",
@@ -507,42 +517,62 @@ def limpiar_titulo(t):
 
 def puntuar_titulo(t, dato_weird=""):
     s, n, tl = 0, len(t), t.lower()
+
     if 45 <= n <= 68:
+        s += 6
+    elif 40 <= n < 45 or 68 < n <= 75:
         s += 4
-    elif 30 <= n < 45 or 68 < n <= 80:
+    elif 30 <= n < 40 or 75 < n <= 80:
         s += 2
     elif n > 95 or n < 25:
-        s -= 6
+        s -= 8
+    else:
+        s -= 2
+
+    ganchos_encontrados = sum(1 for g in GANCHOS if g in tl)
+    s += min(8, ganchos_encontrados * 2)
+
     if re.search(r"\d", t):
+        s += 3
+    if re.search(r"\b\d{2,}\b", t):
         s += 2
-    s += min(3, sum(1 for g in GANCHOS if g in tl))
-
-    if re.search(r'\bsi\b.{1,60}(nunca|no\s)', tl, re.I | re.S):
-        s += 6
-    if re.search(r'\b\d{1,2}\s+(señales|datos|claves|formas|maneras|razones|cosas)', tl):
-        s += 4
-
-    if re.search(r'\b(la trampa|el error|la mentira|tu cerebro|tu cuerpo|te miente|ocultan|lo que callan|nadie sabe|nunca hagas)\b', tl):
-        s += 10
+    caps = re.findall(r"\b[A-ZÁÉÍÓÚÑ]{3,}\b", t)
+    if 1 <= len(caps) <= 3:
+        s += 3
+    elif len(caps) > 4:
+        s -= 3
 
     if dato_weird:
         dc_words = set(re.findall(r"\w+", dato_weird.lower())) - {
-            "de", "la", "el", "que", "y", "en", "un", "una", "por", "para", "con", "los", "las"}
+            "de", "la", "el", "que", "y", "en", "un", "una",
+            "por", "para", "con", "los", "las", "del", "al"
+        }
         tit_words = set(re.findall(r"\w+", tl))
-        if len(dc_words & tit_words) >= 2:
-            s += 5
+        solape = len(dc_words & tit_words)
+        if solape >= 3:
+            s += 6
+        elif solape >= 2:
+            s += 4
+        elif solape >= 1:
+            s += 2
 
-    if re.search(r'\b(menos|peor|nunca|deja de|evita|no hagas|no debes)\b', tl):
+    if re.search(r'\bsi\b.{1,60}(nunca|no\s)', tl, re.I | re.S):
+        s += 6
+    if re.search(r'\b(mientras|cuanto)\s+(m[áa]s|menos)\b', tl):
+        s += 4
+    if re.search(r'\b(m[áa]s|menos)\s+.+\s+(m[áa]s|menos)\b', tl):
         s += 3
+    if "?" in t:
+        s += 4
 
-    caps = re.findall(r"\b[A-ZÁÉÍÓÚÑ]{4,}\b", t)
-    s += 2 if 1 <= len(caps) <= 2 else (-3 if len(caps) > 3 else 0)
     if any(p in tl for p in PROHIBIDAS):
-        s -= 8
+        s -= 10
     if any(tl.startswith(g) for g in GENERICAS):
-        s -= 6
+        s -= 8
     if "!" in t:
-        s -= 1
+        s -= 2
+    if any(ord(c) > 0x1F000 for c in t):
+        s -= 5
     return s
 
 def elegir_titulo(candidatos, dato_weird=""):
@@ -557,7 +587,7 @@ def elegir_titulo(candidatos, dato_weird=""):
     if not puntuados:
         return None
     puntuados.sort(reverse=True)
-    for sc, t in puntuados[:4]:
+    for sc, t in puntuados[:5]:
         print(f"   📝 [{sc:>2}] {t}")
     return puntuados[0][1][:100]
 
@@ -565,7 +595,7 @@ def elegir_texto_portada(opciones, titulo):
     pt = set(re.findall(r"\w+", titulo.lower()))
     mejor = None
     fallbacks_virales = ["TU CUERPO", "TU CEREBRO", "TE MIENTEN", "NUNCA HAGAS",
-                         "EL ERROR", "OCULTAN", "¿QUÉ PASARÍA?"]
+                         "EL ERROR", "OCULTAN", "¿QUÉ PASARÍA?", "80 VECES"]
     for o in opciones or []:
         if not isinstance(o, str):
             continue
@@ -585,21 +615,21 @@ def elegir_texto_portada(opciones, titulo):
     return mejor[1]
 
 # =================================================================
-# GENERACIÓN DE CONTENIDO
+# GENERACIÓN DE CONTENIDO (SEO ÉLITE v1.5)
 # =================================================================
 ESQUEMA_PLAN = """{
- "titulos": ["6 títulos de 45-68 caracteres con ESTRUCTURA DISTINTA. NUNCA termines con '| Ciencia'. AL MENOS 3 DEBEN usar la fórmula 'Weird Science': 'Lo que TU [parte del cuerpo] hace cuando...', 'Por qué NUNCA debes [acción cotidiana]', 'El [dato] que la ciencia oculta sobre...', 'Tu [órgano] te está mintiendo...'. Combina con el dato_weird"],
+ "titulos": ["8 títulos de 45-68 caracteres con ESTRUCTURA DISTINTA. OBLIGATORIO: AL MENOS 2 deben incluir el dato_weird literal o parafraseado. Cada título debe usar UNA de estas 8 estructuras (una por título): (1) 'Lo que TU [cuerpo/cerebro] hace cuando [acción cotidiana]', (2) 'Por qué NUNCA debes [acción común]', (3) 'El [dato] que la ciencia oculta sobre [tema]', (4) 'Tu [órgano] te está mintiendo: el error de [X]', (5) '[Número] cosas que tu cuerpo hace mientras [acción]', (6) 'Si [situación cotidiana], NUNCA [acción] (la ciencia lo explica)', (7) '[Pregunta directa sobre el tema]?', (8) 'El secreto de [proceso biológico/cósmico] que nadie menciona'"],
  "tema_central": "descripción breve del tema",
- "dato_weird": "CRÍTICO: el dato más contraintuitivo, extraño o perturbador del video. Ej: 'tu cuerpo produce electricidad para encender un LED', 'tienes 39 billones de bacterias y solo 30 billones de células humanas', 'tu cerebro te miente 80 veces al día', 'el 2% de tu ADN es neandertal'. Debe aparecer en AL MENOS 3 de los 6 títulos",
+ "dato_weird": "CRÍTICO: el dato más contraintuitivo, extraño o perturbador del video. Ej: 'tu cuerpo produce electricidad para encender un LED', 'tienes 39 billones de bacterias y solo 30 billones de células humanas', 'tu cerebro te miente 80 veces al día', 'el 2% de tu ADN es neandertal'. DEBE ser verificable y aparecer en AL MENOS 2 de los 8 títulos",
  "gancho": "1-2 frases (máx 35 palabras) que abren el video con el dato_weird en segunda persona ('TU cuerpo...', 'TU cerebro...'). DEBE generar asombro inmediato, NO miedo",
  "resumen": "sinopsis de 2-3 oraciones sin spoilers",
- "palabras_clave": ["5 keywords SEO en español, la primera es el keyword principal del video"],
- "palabras_portada": ["3 opciones de 2-3 palabras EN MAYÚSCULAS (ej: TU CUERPO, NUNCA HAGAS, TE MIENTEN, EL ERROR, OCULTAN, TU CEREBRO)"],
+ "palabras_clave": ["5 keywords SEO en español. La PRIMERA es el keyword principal (la que mejor describe el video). Las otras 4 son variaciones long-tail"],
+ "palabras_portada": ["5 opciones de 2-3 palabras EN MAYÚSCULAS (ej: TU CUERPO, NUNCA HAGAS, TE MIENTEN, EL ERROR, OCULTAN, TU CEREBRO, 80 VECES)"],
  "miniatura_escena": "4-6 palabras en inglés para imagen abstracta científica (ej: glowing cells macro, abstract brain neurons, cosmic nebula dark, microscope bacteria)",
- "descripcion_gancho": "2 líneas: la primera con el keyword principal y una promesa concreta; la segunda invita a suscribirse",
+ "descripcion_gancho": "2 líneas: la primera con el keyword principal y una promesa CONCRETA (incluye un número o dato); la segunda invita a suscribirse",
  "titulo_short": "gancho de máx 55 caracteres para un YouTube Short",
  "pregunta_comentario": "pregunta corta que invite a comentar basada en el dato (ej: '¿tú ya sabías esto de tu cuerpo?')",
- "tags": ["10 tags ULTRA-ESPECÍFICOS: 2-3 del tema científico, 2-3 del mecanismo biológico/físico, 1-2 preguntas de audiencia, 1-2 'ciencia + elemento', 1-2 'datos curiosos + elemento'"],
+ "tags": ["12 tags ULTRA-ESPECÍFICOS organizados en 4 categorías: (A) 3 tags del OBJETO/ELEMENTO central del video (ej: 'bacterias intestinales', 'microbioma humano', 'flora intestinal'); (B) 3 tags del MECANISMO biológico/físico (ej: 'eje intestino cerebro', 'neurotransmisores intestinales', 'serotonina digestiva'); (C) 3 PREGUNTAS reales que la gente busca en YouTube (ej: 'por que mi intestino controla mi animo', 'como afecta el estomago al cerebro', 'bacterias buenas para el cerebro'); (D) 3 tags de COLA LARGA (ej: 'microbioma y depresion', 'intestino segundo cerebro', 'bacterias intestino ansiedad')"],
  "puntos": [{"titulo": "2-4 palabras con intriga", "resumen": "qué se explica y qué micro-revelación deja"}]
 }"""
 
@@ -623,17 +653,14 @@ PERFIL DEL NARRADOR: {perfil}
 BÚSQUEDAS REALES YOUTUBE: {sug}
 TÍTULOS YA PUBLICADOS (no repetir): {prev}
 
-━━━ REGLA CRÍTICA: TÍTULO "WEIRD SCIENCE" (CURIOSIDAD + ASOMBRO) ━━━
-El canal viraliza con títulos que hacen que el espectador piense "no puedo creer que esto sea real". Fórmulas:
-  • "Lo que TU [parte del cuerpo] hace cuando [acción cotidiana]"
-  • "Por qué NUNCA debes [acción común] (la ciencia lo explica)"
-  • "El [dato] que la ciencia oculta sobre [tema]"
-  • "Tu [órgano] te está mintiendo: el error de [X]"
-El campo 'titulos' debe contener 6 opciones. AL MENOS 3 deben usar esta estructura.
+━━━ REGLA CRÍTICA: TÍTULO "WEIRD SCIENCE" ━━━
+El canal viraliza con títulos que hacen que el espectador piense "no puedo creer que esto sea real".
+El campo 'titulos' debe contener 8 opciones (una por cada estructura del esquema).
+AL MENOS 2 deben incluir el dato_weird literal o parafraseado.
 
 ━━━ REGLA CRÍTICA: DATO WEIRD ━━━
 El campo 'dato_weird' debe ser un hecho científico real pero tan extraño que parezca mentira.
-DEBE ser verificable y aparecer en AL MENOS 3 de los 6 títulos.
+DEBE ser verificable y aparecer en AL MENOS 2 de los 8 títulos.
 
 ━━━ REGLAS DE CONTENIDO ━━━
 1. CADA punto debe aportar un DATO CIENTÍFICO CONCRETO (no relleno, no opinión).
@@ -645,9 +672,9 @@ DEBE ser verificable y aparecer en AL MENOS 3 de los 6 títulos.
 
 Responde SOLO con este JSON:
 {ESQUEMA_PLAN}"""
-    txt = llm(prompt, temperature=0.9, max_tokens=2400, json_mode=True)
+    txt = llm(prompt, temperature=0.9, max_tokens=2800, json_mode=True)
     plan = parsear_json(txt)
-    if not (isinstance(plan.get("titulos"), list) and len(plan["titulos"]) >= 3
+    if not (isinstance(plan.get("titulos"), list) and len(plan["titulos"]) >= 5
             and isinstance(plan.get("puntos"), list) and len(plan["puntos"]) >= NUM_PUNTOS
             and plan.get("gancho") and plan.get("palabras_portada")
             and plan.get("dato_weird")):
@@ -856,10 +883,12 @@ def reutilizar_imagen_flux(idx):
 # CLOUDFLARE FLUX
 # =================================================================
 ANTI_DEFORM = (
-    ", cinematic wide shot, abstract scientific visualization, "
-    "glowing bioluminescent elements, minimalist dark aesthetic, highly detailed, 8k, "
-    "professional science documentary style, no realistic human faces, no realistic human bodies, "
-    "no deformed anatomy, no mutated hands, no extra limbs, no text, no words, clean and futuristic"
+    ", cinematic wide shot, professional science documentary style, 8k, "
+    "abstract scientific visualization, glowing bioluminescent elements, "
+    "minimalist dark aesthetic, highly detailed, "
+    "safe to show: human silhouette from behind, hands touching objects, "
+    "eyes close-up, skin texture macro, single body part close-up, "
+    "no text, no words, clean and futuristic"
 )
 
 def generar_imagen_cloudflare(prompt_en, idx, intentos=3):
@@ -939,7 +968,7 @@ def buscar_fotos_pexels(query, cantidad=1):
 def imagen_fallback_pexels(prompt_en, idx):
     if not PEXELS_API_KEY:
         return None
-    query = " ".join(prompt_en.split()[:4])
+    query = " ".join(prompt_en.split()[:5])
     urls = buscar_fotos_pexels(query, 1)
     if urls:
         ruta = f"temp_img_{idx}_pexels.jpg"
@@ -963,44 +992,58 @@ def imagen_fallback(idx):
     return ruta
 
 # =================================================================
-# PLANIFICACIÓN VISUAL POR IA
+# PLANIFICACIÓN VISUAL (DOS PROMPTS POR SEGMENTO)
 # =================================================================
 def planificar_visuales(segs, tema):
     out = [None] * len(segs)
     for ini in range(0, len(segs), 15):
         lote = segs[ini:ini + 15]
-        listado = "\n".join(f"{j+1}. {s['texto'][:230]}" for j, s in enumerate(lote))
-        prompt = f"""Eres director de fotografía de un canal de DIVULGACIÓN CIENTÍFICA de élite
-(estilo BBC / Nat Geo / Veritasium).
+        listado = "\n".join(f"{j+1}. {s['texto'][:250]}" for j, s in enumerate(lote))
+        prompt = f"""Eres director de fotografía de un canal de DIVULGACIÓN CIENTÍFICA de élite.
 
-Para CADA fragmento numerado devuelve UNA consulta corta (4-6 palabras, EN INGLÉS)
-para generar una imagen con Flux que ilustre visualmente ese fragmento.
+Para CADA fragmento numerado, devuelve DOS prompts EN INGLÉS:
 
-REGLAS CRÍTICAS:
-- Estilo: visualización científica abstracta, cinematográfica, oscura-elegante
-- Prefiere: células brillantes, neuronas, ADN abstracto, nebulosas, partículas,
-  microscopía artística, diagramas conceptuales
-- EVITA TOTALMENTE: rostros humanos, cuerpos humanos realistas, anatomía detallada
-- Ejemplos: "glowing neuron network dark", "abstract dna helix glowing",
-  "microscopic bacteria bioluminescent", "cosmic nebula purple dark",
-  "brain neurons firing abstract", "cell division macro glowing"
-- NUNCA incluyas: "text", "words", "letters", "person", "face", "human"
+1. "flux": Prompt de 5-8 palabras para generar una imagen ESTILIZADA con IA (Flux).
+   - Estilo: cinematográfico, abstracto, oscuro-elegante, científico
+   - PERMITIDO: silueta humana de espaldas, manos tocando objetos, ojos close-up, textura de piel macro, un solo órgano o parte del cuerpo en close-up
+   - PROHIBIDO: rostros completos, cuerpos desnudos, anatomía realista detallada
+   - Ejemplo: "silhouette person looking at dying sun", "hands shivering cold macro dark", "abstract brain neurons glowing blue"
 
-Tema: {tema['tema']}
-Fragmentos:\n{listado}
+2. "pexels": Prompt de 3-5 palabras para buscar FOTO REAL en Pexels.
+   - DEBE ser concreto y con personas/objetos reales
+   - DEBE reflejar el TEMA del fragmento (no solo el ambiente)
+   - Ejemplo: "man shivering cold dark", "person looking sunset", "human hands touching ice"
+   - Si el fragmento habla de cuerpo humano → incluye "man", "woman", "person", "hands"
+   - Si el fragmento habla de espacio → incluye "sun", "stars", "night sky"
 
-Responde SOLO JSON: {{"consultas": ["..."]}} con exactamente {len(lote)} elementos."""
+TEMA GLOBAL: {tema['tema']}
+ÁNGULO: {tema['angulo']}
+
+Fragmentos:
+{listado}
+
+Responde SOLO JSON con esta estructura:
+{{
+  "consultas": [
+    {{"flux": "...", "pexels": "..."}},
+    {{"flux": "...", "pexels": "..."}}
+  ]
+}}
+Debe haber exactamente {len(lote)} elementos en el array."""
         lista = []
         try:
-            lista = parsear_json(llm(prompt, 0.4, 800, json_mode=True)).get("consultas", [])
+            lista = parsear_json(llm(prompt, 0.5, 1200, json_mode=True)).get("consultas", [])
         except Exception as e:
             print(f"⚠️ Planificación visual: {e}")
         for j, s in enumerate(lote):
-            q = lista[j] if j < len(lista) and isinstance(lista[j], str) else ""
-            q = " ".join(re.sub(r"[^a-zA-Z ]", " ", q).split()[:7])
-            if len(q) < 10:
-                q = "abstract scientific visualization glowing cells dark"
-            out[ini + j] = q
+            item = lista[j] if j < len(lista) and isinstance(lista[j], dict) else {}
+            q_flux = " ".join(re.sub(r"[^a-zA-Z ]", " ", str(item.get("flux", ""))).split()[:8])
+            q_pex  = " ".join(re.sub(r"[^a-zA-Z ]", " ", str(item.get("pexels", ""))).split()[:5])
+            if len(q_flux) < 10:
+                q_flux = "abstract scientific visualization glowing cells dark"
+            if len(q_pex) < 6:
+                q_pex = "person dark night cold"
+            out[ini + j] = {"flux": q_flux, "pexels": q_pex}
     return out
 
 # =================================================================
@@ -1216,7 +1259,7 @@ def crear_miniatura(img_path, texto, salida):
         return False
 
 # =================================================================
-# SEO ELITE (CURIOSITY GAP)
+# SEO ELITE (5 BLOQUES DE TAGS)
 # =================================================================
 def _ascii_tag_yt(t):
     nfd = unicodedata.normalize('NFD', str(t))
@@ -1231,39 +1274,42 @@ def construir_tags(plan, tema, sugerencias):
     if isinstance(tags_ia, str):
         tags_ia = [x.strip() for x in tags_ia.split(",")]
 
-    exactos = list(tags_ia)[:5]
+    bloque_a = list(tags_ia)[:8]
 
-    broad = [
-        "ciencia", "divulgacion cientifica", "datos curiosos",
-        "curiosidades cientificas", "ciencia weird", "asombro cientifico",
-        "documental cientifico", "ciencia para todos", "misterios de la ciencia"
-    ]
-
-    curiosity_gap = [
+    bloque_b = [
         f"que pasaria si {nombre_tema}",
         f"por que {nombre_tema}",
         f"lo que la ciencia oculta de {nombre_tema}",
         f"tu cuerpo y {nombre_tema}",
         f"tu cerebro y {nombre_tema}",
         f"el secreto de {nombre_tema}",
+        f"datos curiosos de {nombre_tema}",
     ]
 
-    long_tail = [
+    bloque_c = list(sugerencias)[:5]
+
+    bloque_d = [
         f"ciencia {nombre_tema}",
-        f"datos curiosos de {nombre_tema}",
         f"documental de {nombre_tema}",
         f"explicacion cientifica de {nombre_tema}",
+        f"divulgacion cientifica {nombre_tema}",
+        f"misterios de {nombre_tema}",
+    ] + list(tema["keywords"])[:5]
+
+    bloque_e = [
+        "ciencia", "divulgacion cientifica", "datos curiosos",
+        "curiosidades cientificas", "ciencia weird", "asombro cientifico",
+        "documental cientifico", "ciencia para todos", "misterios de la ciencia",
+        "cuerpo humano", "universo", "neurociencia",
     ]
 
-    preguntas = list(sugerencias)[:3]
-    especificos_tema = list(tema["keywords"])[:3]
-
     todos, vistos = [], set()
-    for raw in exactos + curiosity_gap + long_tail + broad + preguntas + especificos_tema:
+    for raw in bloque_a + bloque_b + bloque_c + bloque_d + bloque_e:
         tag = _ascii_tag_yt(raw)
         if not tag or len(tag) < 2 or len(tag) > 40 or tag in vistos:
             continue
-        if any(x in tag for x in ("100 real", "veridico", "caso real", "cura", "remedio")):
+        if any(x in tag for x in ("100 real", "veridico", "caso real",
+                                    "cura", "remedio", "milagro", "garantizado")):
             continue
         vistos.add(tag)
         todos.append(tag)
@@ -1271,11 +1317,11 @@ def construir_tags(plan, tema, sugerencias):
     resultado, total_chars = [], 0
     for tag in todos:
         costo = len(tag) + 1
-        if total_chars + costo > 460 or len(resultado) >= 20:
+        if total_chars + costo > 480 or len(resultado) >= 25:
             break
         resultado.append(tag)
         total_chars += costo
-    print(f"🏷️  Tags ({len(resultado)}): {', '.join(resultado[:6])}...")
+    print(f"🏷️  Tags ({len(resultado)}): {', '.join(resultado[:8])}...")
     return resultado
 
 def construir_hashtags(tema, plan):
@@ -1292,17 +1338,26 @@ def construir_hashtags(tema, plan):
 def construir_descripcion(plan, tema, caps_ts, sugerencias, hashtags):
     kws = plan.get("palabras_clave", [])
     keyword_principal = kws[0] if kws else tema["tema"].replace("_", " ")
+    keyword_secundaria = kws[1] if len(kws) > 1 else keyword_principal
     dato_w = plan.get("dato_weird", "")
     resumen = plan.get("resumen", "")
 
-    linea1 = f"{keyword_principal.title()}: {dato_w}." if dato_w else f"{keyword_principal.title()}: {resumen[:120]}"
-    linea2 = f"En este video te explico {plan.get('gancho', '')[:180]}"
+    if dato_w:
+        linea1 = f"🎯 {keyword_principal.title()}: {dato_w}."
+    else:
+        linea1 = f"🎯 {keyword_principal.title()}: {resumen[:120]}"
+
+    gancho_short = plan.get("gancho", "")[:180]
+    if keyword_secundaria.lower() not in gancho_short.lower():
+        linea2 = f"En este video te explico {gancho_short} (y por qué {keyword_secundaria} es clave)."
+    else:
+        linea2 = f"En este video te explico {gancho_short}"
 
     capitulos = "\n".join(f"{ts} {t}" for ts, t in caps_ts)
     rel = ", ".join(sugerencias[:5])
 
     partes = [
-        f"🎯 {linea1}",
+        linea1,
         linea2,
         f"",
         f"🔔 SUSCRÍBETE para un video nuevo cada día: {CANAL_LINK}?sub_confirmation=1",
@@ -1320,12 +1375,14 @@ def construir_descripcion(plan, tema, caps_ts, sugerencias, hashtags):
         partes.append(f"")
 
     partes += [
-        f"📚 Otros videos que te pueden interesar:",
+        f"📚 OTROS VIDEOS QUE TE PUEDEN INTERESAR:",
         f"• Curiosidades de tu cuerpo → {CANAL_LINK}/videos",
         f"• ¿Qué pasaría si...? → {CANAL_LINK}/videos",
+        f"• Ciencia weird explicada → {CANAL_LINK}/videos",
     ]
 
     if ACTIVAR_DISCLOSURE_IA:
+        partes.append("")
         partes.append(DISCLOSURE_TEXT.strip())
 
     partes.append("")
@@ -1382,7 +1439,6 @@ def proximo_slot_batch():
         dia_base = (ahora + timedelta(days=1)).date()
     else:
         dia_base = ahora.date()
-
     dia_dt = datetime.combine(dia_base, datetime.min.time()).replace(tzinfo=TZ)
 
     def slot(hora, variacion, offset=0):
@@ -1494,7 +1550,7 @@ VIDEO LARGO:
 
 ━━━ SHORT 1 (ángulo: PROBLEMA/ADVERTENCIA) ━━━
 - Título: máx 55 chars, contiene el dato weird o una advertencia.
-- Guion: 80-100 palabras. EMPIEZA CON UN PATTERN INTERRUPT (ej: "Si haces esto, tu cuerpo reacciona así", "El 90% no sabe esto").
+- Guion: 80-100 palabras. EMPIEZA CON UN PATTERN INTERRUPT.
 - Hashtags: 4-5 hashtags específicos del short.
 
 ━━━ SHORT 2 (ángulo: SOLUCIÓN/PARADOJA) ━━━
@@ -1511,16 +1567,8 @@ VIDEO LARGO:
 
 Responde SOLO JSON:
 {{
- "short1": {{
-   "titulo": "...",
-   "guion": "...",
-   "hashtags": "#tag1 #tag2 #tag3 #tag4"
- }},
- "short2": {{
-   "titulo": "...",
-   "guion": "...",
-   "hashtags": "#tag1 #tag2 #tag3 #tag4"
- }}
+ "short1": {{"titulo": "...", "guion": "...", "hashtags": "#tag1 #tag2 #tag3 #tag4"}},
+ "short2": {{"titulo": "...", "guion": "...", "hashtags": "#tag1 #tag2 #tag3 #tag4"}}
 }}"""
     try:
         txt = llm(prompt, temperature=0.95, max_tokens=1500, json_mode=True)
@@ -1532,7 +1580,7 @@ Responde SOLO JSON:
             if not all(f in s for f in ("titulo", "guion", "hashtags")):
                 raise ValueError(f"{k} incompleto")
             if len(s["guion"].split()) < 50:
-                raise ValueError(f"{k} guion muy corto ({len(s['guion'].split())} palabras)")
+                raise ValueError(f"{k} guion muy corto")
         t1 = data["short1"]["titulo"].lower().strip()
         t2 = data["short2"]["titulo"].lower().strip()
         if t1 == t2:
@@ -1561,20 +1609,19 @@ def crear_short_con_guion(guion_texto, titulo_short, hashtags_short, fondo, indi
     total = construir_timeline(segs)
     print(f"   🔊 Short {indice} audio: {total:.1f}s")
 
+    prompts_short = planificar_visuales(segs, {"tema": "short", "angulo": titulo_short})
+
     for i, s in enumerate(segs):
         n_imgs = max(1, round(s["dur_audio"] / SEG_ESCENA))
+        pv = prompts_short[i] if i < len(prompts_short) else {"flux": "abstract scientific visualization glowing dark", "pexels": "person dark night"}
         medios = []
         for k in range(n_imgs):
             img_id = f"sh{indice}_{i}_{k}"
             ruta = reutilizar_imagen_flux(img_id)
             if not ruta:
-                ruta = generar_imagen_cloudflare(
-                    "cinematic dark science abstract visualization", img_id
-                )
+                ruta = generar_imagen_cloudflare(pv["flux"], img_id)
             if not ruta:
-                ruta = imagen_fallback_pexels(
-                    "cinematic dark science abstract", img_id
-                )
+                ruta = imagen_fallback_pexels(pv["pexels"], img_id)
             if not ruta:
                 ruta = imagen_fallback(img_id)
             medios.append(ruta)
@@ -1653,9 +1700,8 @@ def verificar_envs():
     if faltan:
         print(f"❌ Faltan variables: {', '.join(faltan)}")
         sys.exit(1)
-
     if not PEXELS_API_KEY:
-        print("⚠️ PEXELS_API_KEY no configurada — sin fallback Pexels")
+        print("⚠️ PEXELS_API_KEY no configurada")
     else:
         try:
             r = requests.get(
@@ -1663,12 +1709,11 @@ def verificar_envs():
                 headers={"Authorization": PEXELS_API_KEY}, timeout=10
             )
             if r.status_code == 200:
-                print("✅ Pexels OK (fallback nivel 3)")
+                print("✅ Pexels OK")
             else:
-                print(f"⚠️ Pexels respondió {r.status_code} — fallback deshabilitado")
+                print(f"⚠️ Pexels respondió {r.status_code}")
         except Exception as e:
             print(f"⚠️ Pexels no responde: {e}")
-
     yt = crear_cliente_youtube()
     if yt is None:
         print("❌ YOUTUBE_USER_TOKEN inválido/expirado")
@@ -1705,11 +1750,10 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧬 CHISPAS INQUIETAS (CIENCIA WEIRD) - BOT v1.3 (SEG_ESCENA=18s)")
+    print("🧬 CHISPAS INQUIETAS - BOT v1.5 ELITE PREMIUM")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
-    print(f"📤 1 Video Largo (8-12 min) + 2 Shorts | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
-    print(f"🛡️  Fallback: Cloudflare → Pool Flux → Pexels → Gradiente")
-    print(f"📂 Categoría YouTube: Ciencia y Tecnología (28)")
+    print(f"📤 1 Video Largo + 2 Shorts | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
+    print(f"🎯 v1.5: SEO 4 capas + 5 bloques tags + imágenes concretas")
     print("=" * 70)
 
     actualizar_rendimiento(youtube, estado)
@@ -1791,18 +1835,21 @@ def main():
     total = construir_timeline(segs)
     print(f"⏱️ Duración final: {total/60:.1f} min")
 
-    print("🎨 Planificando visuales con IA...")
+    print("🎨 Planificando visuales con IA (Flux + Pexels)...")
     prompts_visuales = planificar_visuales(segs, tema)
 
     stats = {"flux": 0, "pool": 0, "pexels": 0, "gradient": 0}
     for i, s in enumerate(segs):
         n_imgs = max(1, round(s["dur_audio"] / SEG_ESCENA))
-        prompt_visual = prompts_visuales[i] if i < len(prompts_visuales) else "abstract scientific visualization glowing cells dark"
-        print(f"🖼️ {i+1}/{len(segs)} [{s['etapa']}] '{prompt_visual}' x{n_imgs}")
+        pv = prompts_visuales[i] if i < len(prompts_visuales) else {
+            "flux": "abstract scientific visualization glowing cells dark",
+            "pexels": "person dark night"
+        }
+        print(f"🖼️ {i+1}/{len(segs)} [{s['etapa']}] flux='{pv['flux']}' pexels='{pv['pexels']}' x{n_imgs}")
         medios = []
         for k in range(n_imgs):
             img_id = f"{i}_{k}"
-            ruta = generar_imagen_cloudflare(prompt_visual, img_id)
+            ruta = generar_imagen_cloudflare(pv["flux"], img_id)
             if ruta:
                 stats["flux"] += 1
             else:
@@ -1810,11 +1857,11 @@ def main():
                 if ruta:
                     stats["pool"] += 1
                 else:
-                    ruta = imagen_fallback_pexels(prompt_visual, img_id)
+                    ruta = imagen_fallback_pexels(pv["pexels"], img_id)
                     if ruta:
                         stats["pexels"] += 1
                     else:
-                        print(f"   ⚠️ Cloudflare+Pool+Pexels fallaron, usando gradiente")
+                        print(f"   ⚠️ Todo falló, usando gradiente")
                         ruta = imagen_fallback(img_id)
                         stats["gradient"] += 1
             medios.append(ruta)
@@ -1852,7 +1899,7 @@ def main():
     if not base_mini:
         base_mini = reutilizar_imagen_flux("thumb_mini")
     if not base_mini:
-        base_mini = imagen_fallback_pexels(escena_mini, "thumb_mini")
+        base_mini = imagen_fallback_pexels(escena_mini + " portrait", "thumb_mini")
     if not base_mini:
         base_mini = imagen_fallback("thumb_mini")
     miniatura = "miniatura.jpg" if crear_miniatura(base_mini, portada, "miniatura.jpg") else None
@@ -1899,7 +1946,7 @@ def main():
                     fondo, 1, "short_1.mp4"
                 )
                 if s1 is None:
-                    print("   ⏭️ Short 1 fue SKIPeado. No se sube.")
+                    print("   ⏭️ Short 1 fue SKIPeado.")
                 else:
                     print(f"   ✅ Short 1 renderizado: {os.path.getsize(s1) // 1024} KB")
                     t_short1 = short1_data["titulo"][:88] + " #Shorts"
@@ -1932,7 +1979,7 @@ def main():
                     fondo, 2, "short_2.mp4"
                 )
                 if s2 is None:
-                    print("   ⏭️ Short 2 fue SKIPeado. No se sube.")
+                    print("   ⏭️ Short 2 fue SKIPeado.")
                 else:
                     print(f"   ✅ Short 2 renderizado: {os.path.getsize(s2) // 1024} KB")
                     t_short2 = short2_data["titulo"][:88] + " #Shorts"
