@@ -1,6 +1,7 @@
 {
   "ultimos_fondos": [
-    "The Ascent.mp3"
+    "The Ascent.mp3",
+    "Binary Pulse.mp3"
   ],
   "videos": [
     {
@@ -11,12 +12,42 @@
       "perfil": "químico divulgador con enfoque en fenómenos cotidianos",
       "dato_weird": "Tu cuerpo ya vivió un apagón solar de 8 minutos: la luz que te calienta ahora mismo salió del Sol hace 8 minutos y 20 segundos, y si el Sol se apagara, ese silencio luminoso sería el primer aviso de un efecto dominó que congelaría la Tierra en horas.",
       "duracion_min": 10.9,
-      "fecha": "2026-11-14T19:15:19.724568-06:00"
+      "fecha": "2026-11-14T19:15:19.724568-06:00",
+      "vistas": 0
+    },
+    {
+      "id": "rzuAoW2wkK8",
+      "tipo": "short",
+      "titulo": "Tu cuerpo a 1.670 km/h: la Tierra frena",
+      "tema": "tierra_deja_de_girar_cuerpo_humano",
+      "fecha": "2026-11-16T16:06:36.309151-06:00"
+    },
+    {
+      "id": "PwKfIG5q0DY",
+      "tipo": "short",
+      "titulo": "Nunca sentiste los 1.670 km/h: paradoja",
+      "tema": "tierra_deja_de_girar_cuerpo_humano",
+      "fecha": "2026-11-16T16:08:10.605132-06:00"
     }
   ],
   "temas_recientes": [
-    "sol_se_apaga"
+    "sol_se_apaga",
+    "tierra_deja_de_girar_cuerpo_humano"
   ],
-  "ultima_publicacion": "2026-11-14T19:15:19.724568-06:00",
-  "publicaciones_hoy": 0
+  "ultima_publicacion": "2026-11-16T16:08:12.252210-06:00",
+  "publicaciones_hoy": 0,
+  "avatar_audiencia": {
+    "edad": "18-35",
+    "genero": "ambos",
+    "intereses": [
+      "ciencia",
+      "fenómenos naturales",
+      "divulgación científica",
+      "catástrofes",
+      "física"
+    ],
+    "dolor": "curiosidad por escenarios apocalípticos y ganas de entender la física cotidiana de forma impactante",
+    "nivel": "educativo",
+    "por_que_ve_esto": "Le atrae imaginar un escenario extremo y comprobar qué le pasaría a su propio cuerpo con una explicación científica sencilla y sorprendente."
+  }
 }
