@@ -1,7 +1,8 @@
 {
   "ultimos_fondos": [
     "The Ascent.mp3",
-    "Binary Pulse.mp3"
+    "Binary Pulse.mp3",
+    "Forward Momentum.mp3"
   ],
   "videos": [
     {
@@ -20,21 +21,38 @@
       "tipo": "short",
       "titulo": "Tu cuerpo a 1.670 km/h: la Tierra frena",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
-      "fecha": "2026-11-16T16:06:36.309151-06:00"
+      "fecha": "2026-11-16T16:06:36.309151-06:00",
+      "vistas": 19
     },
     {
       "id": "PwKfIG5q0DY",
       "tipo": "short",
       "titulo": "Nunca sentiste los 1.670 km/h: paradoja",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
-      "fecha": "2026-11-16T16:08:10.605132-06:00"
+      "fecha": "2026-11-16T16:08:10.605132-06:00",
+      "vistas": 15
+    },
+    {
+      "id": "YStuJ6wE6Nk",
+      "tipo": "short",
+      "titulo": "Tu corazón late 100.000 veces y tu cerebro lo usa en tu contra",
+      "tema": "interocepcion_sexto_sentido",
+      "fecha": "2026-11-17T14:52:48.818129-06:00"
+    },
+    {
+      "id": "y-thZygPc3E",
+      "tipo": "short",
+      "titulo": "La paradoja de tu sexto sentido: sientes tu cuerpo, pero no siempre acierta",
+      "tema": "interocepcion_sexto_sentido",
+      "fecha": "2026-11-17T14:54:01.466884-06:00"
     }
   ],
   "temas_recientes": [
     "sol_se_apaga",
-    "tierra_deja_de_girar_cuerpo_humano"
+    "tierra_deja_de_girar_cuerpo_humano",
+    "interocepcion_sexto_sentido"
   ],
-  "ultima_publicacion": "2026-11-16T16:08:12.252210-06:00",
+  "ultima_publicacion": "2026-11-17T14:54:01.466927-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
