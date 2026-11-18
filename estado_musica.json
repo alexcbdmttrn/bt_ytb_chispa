@@ -2,7 +2,8 @@
   "ultimos_fondos": [
     "The Ascent.mp3",
     "Binary Pulse.mp3",
-    "Forward Momentum.mp3"
+    "Forward Momentum.mp3",
+    "Peak Momentum.mp3"
   ],
   "videos": [
     {
@@ -37,22 +38,39 @@
       "tipo": "short",
       "titulo": "Tu corazón late 100.000 veces y tu cerebro lo usa en tu contra",
       "tema": "interocepcion_sexto_sentido",
-      "fecha": "2026-11-17T14:52:48.818129-06:00"
+      "fecha": "2026-11-17T14:52:48.818129-06:00",
+      "vistas": 0
     },
     {
       "id": "y-thZygPc3E",
       "tipo": "short",
       "titulo": "La paradoja de tu sexto sentido: sientes tu cuerpo, pero no siempre acierta",
       "tema": "interocepcion_sexto_sentido",
-      "fecha": "2026-11-17T14:54:01.466884-06:00"
+      "fecha": "2026-11-17T14:54:01.466884-06:00",
+      "vistas": 6
+    },
+    {
+      "id": "30criXmgyoY",
+      "tipo": "short",
+      "titulo": "¿Listo para salir volando a 1.670 km/h?",
+      "tema": "tierra_deja_de_girar_efectos_cuerpo",
+      "fecha": "2026-11-18T14:14:29.386527-06:00"
+    },
+    {
+      "id": "Jp8n24VnRAs",
+      "tipo": "short",
+      "titulo": "La paradoja del día eterno: ni día ni noche",
+      "tema": "tierra_deja_de_girar_efectos_cuerpo",
+      "fecha": "2026-11-18T14:15:54.505099-06:00"
     }
   ],
   "temas_recientes": [
     "sol_se_apaga",
     "tierra_deja_de_girar_cuerpo_humano",
-    "interocepcion_sexto_sentido"
+    "interocepcion_sexto_sentido",
+    "tierra_deja_de_girar_efectos_cuerpo"
   ],
-  "ultima_publicacion": "2026-11-17T14:54:01.466927-06:00",
+  "ultima_publicacion": "2026-11-18T14:15:54.505123-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
