@@ -3,7 +3,8 @@
     "The Ascent.mp3",
     "Binary Pulse.mp3",
     "Forward Momentum.mp3",
-    "Peak Momentum.mp3"
+    "Peak Momentum.mp3",
+    "The Ascent.mp3"
   ],
   "videos": [
     {
@@ -23,7 +24,7 @@
       "titulo": "Tu cuerpo a 1.670 km/h: la Tierra frena",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
       "fecha": "2026-11-16T16:06:36.309151-06:00",
-      "vistas": 19
+      "vistas": 20
     },
     {
       "id": "PwKfIG5q0DY",
@@ -54,23 +55,40 @@
       "tipo": "short",
       "titulo": "¿Listo para salir volando a 1.670 km/h?",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
-      "fecha": "2026-11-18T14:14:29.386527-06:00"
+      "fecha": "2026-11-18T14:14:29.386527-06:00",
+      "vistas": 2
     },
     {
       "id": "Jp8n24VnRAs",
       "tipo": "short",
       "titulo": "La paradoja del día eterno: ni día ni noche",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
-      "fecha": "2026-11-18T14:15:54.505099-06:00"
+      "fecha": "2026-11-18T14:15:54.505099-06:00",
+      "vistas": 4
+    },
+    {
+      "id": "P5Z_OwQoJFg",
+      "tipo": "short",
+      "titulo": "Aguantar un estornudo: presión x20 ¡peligro!",
+      "tema": "estornudo_aguantado_consecuencias",
+      "fecha": "2026-11-19T14:10:51.027509-06:00"
+    },
+    {
+      "id": "ntM5yyyMLe4",
+      "tipo": "short",
+      "titulo": "La paradoja del estornudo: aguantarlo no lo detiene",
+      "tema": "estornudo_aguantado_consecuencias",
+      "fecha": "2026-11-19T14:12:10.268726-06:00"
     }
   ],
   "temas_recientes": [
     "sol_se_apaga",
     "tierra_deja_de_girar_cuerpo_humano",
     "interocepcion_sexto_sentido",
-    "tierra_deja_de_girar_efectos_cuerpo"
+    "tierra_deja_de_girar_efectos_cuerpo",
+    "estornudo_aguantado_consecuencias"
   ],
-  "ultima_publicacion": "2026-11-18T14:15:54.505123-06:00",
+  "ultima_publicacion": "2026-11-19T14:12:10.268763-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
