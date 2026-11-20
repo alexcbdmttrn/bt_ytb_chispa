@@ -4,7 +4,8 @@
     "Binary Pulse.mp3",
     "Forward Momentum.mp3",
     "Peak Momentum.mp3",
-    "The Ascent.mp3"
+    "The Ascent.mp3",
+    "Binary Pulse.mp3"
   ],
   "videos": [
     {
@@ -71,14 +72,37 @@
       "tipo": "short",
       "titulo": "Aguantar un estornudo: presión x20 ¡peligro!",
       "tema": "estornudo_aguantado_consecuencias",
-      "fecha": "2026-11-19T14:10:51.027509-06:00"
+      "fecha": "2026-11-19T14:10:51.027509-06:00",
+      "vistas": 3
     },
     {
       "id": "ntM5yyyMLe4",
       "tipo": "short",
       "titulo": "La paradoja del estornudo: aguantarlo no lo detiene",
       "tema": "estornudo_aguantado_consecuencias",
-      "fecha": "2026-11-19T14:12:10.268726-06:00"
+      "fecha": "2026-11-19T14:12:10.268726-06:00",
+      "vistas": 57
+    },
+    {
+      "id": "RrvR-z0UQMc",
+      "tipo": "largo",
+      "titulo": "¿Por qué algunas personas madrugan sin querer?",
+      "tema": "adn_neandertal_rasgos",
+      "fecha": "2026-11-20T13:50:40.453930-06:00"
+    },
+    {
+      "id": "d6oxTlOTbfc",
+      "tipo": "short",
+      "titulo": "¿Despiertas a las 3 AM? La advertencia neandertal",
+      "tema": "adn_neandertal_rasgos",
+      "fecha": "2026-11-20T13:52:24.852018-06:00"
+    },
+    {
+      "id": "GIAOm_Ggzcs",
+      "tipo": "short",
+      "titulo": "Madrugar es un regalo evolutivo, no una condena",
+      "tema": "adn_neandertal_rasgos",
+      "fecha": "2026-11-20T13:54:03.530568-06:00"
     }
   ],
   "temas_recientes": [
@@ -86,9 +110,10 @@
     "tierra_deja_de_girar_cuerpo_humano",
     "interocepcion_sexto_sentido",
     "tierra_deja_de_girar_efectos_cuerpo",
-    "estornudo_aguantado_consecuencias"
+    "estornudo_aguantado_consecuencias",
+    "adn_neandertal_rasgos"
   ],
-  "ultima_publicacion": "2026-11-19T14:12:10.268763-06:00",
+  "ultima_publicacion": "2026-11-20T13:54:03.531586-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
@@ -103,5 +128,11 @@
     "dolor": "curiosidad por escenarios apocalípticos y ganas de entender la física cotidiana de forma impactante",
     "nivel": "educativo",
     "por_que_ve_esto": "Le atrae imaginar un escenario extremo y comprobar qué le pasaría a su propio cuerpo con una explicación científica sencilla y sorprendente."
+  },
+  "perfil_lock": {
+    "formato_nombre": "experimento_mental",
+    "perfil": "microbiólogo con experiencia en divulgación",
+    "video_id_ancla": "RrvR-z0UQMc",
+    "desde": "2026-11-20T13:54:03.530599-06:00"
   }
 }
