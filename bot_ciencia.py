@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.7 BOLA DE NIEVE
-v1.7 - ESTRATEGIA DE CANAL (basado en principios de crecimiento):
-  - Detección de OUTLIERS (canal chico + video viral = demanda real)
-  - Cruce de temas ganadores (pool + outlier real de YouTube)
-  - Lock de formato/narrador (bola de nieve, no saltar de personalidad)
-  - Avatar de audiencia + validación "¿lo vería la misma persona?"
-  - Detector de "uniforme del nicho" (para diferenciarse)
-  - Identidad visual fija (color, tipografía, miniatura consistente)
-  - Metáfora cotidiana + tono cercano en guiones (baja carga mental)
+CHISPAS INQUIETAS (CIENCIA WEIRD) - Bot v1.8
+v1.8 - FIX CRÍTICO invalidTags + FALLBACK TTS:
+  - sanitizar_tags_yt(): filtro agresivo (18 tags, 25 chars, 3 palabras)
+  - construir_tags() reemplazada con sanitización
+  - subir_video() con retry automático para invalidTags
+  - generar_audio() con fallback gTTS si Edge TTS falla
+v1.7 - ESTRATEGIA DE CANAL (Bola de Nieve):
+  - Outliers, cruce de temas, lock de perfil, avatar, uniforme
+  - Identidad visual fija, fix YouTube API, siglas protegidas
 v1.6 - MINIATURAS ÉLITE: rostro + texto + composición profesional
 v1.5 - SEO élite 4 capas + 5 bloques tags + descripción con hook
 v1.4 - Fix imágenes: dos prompts por segmento
@@ -102,7 +102,7 @@ VARIACION_MINUTOS_SHORT_2 = int(os.getenv("VARIACION_MINUTOS_SHORT_2", "60"))
 INTERVALO_MIN_HORAS       = float(os.getenv("INTERVALO_MIN_HORAS", "20"))
 ACTIVAR_DISCLOSURE_IA     = True
 
-# ═══════════════════════════ v1.7 ═══════════════════════════
+# ═══════════════════════════ v1.7 BOLA DE NIEVE ═══════════════════════════
 OUTLIERS_FILE  = "outliers_cache.json"
 UNIFORME_FILE  = "uniforme_cache.json"
 PERFIL_LOCK_MIN_VISTAS = int(os.getenv("PERFIL_LOCK_MIN_VISTAS", "800"))
@@ -117,7 +117,7 @@ IDENTIDAD_VISUAL = {
     "estilo_thumb": "curiosidad_cian",
     "watermark":    "CIENCIA WEIRD",
 }
-# ═══════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
 
 DISCLOSURE_TEXT = (
     "\n\n⚠️ Este contenido es un documental científico elaborado con asistencia de "
@@ -301,6 +301,10 @@ PERFILES_NARRADOR = [
 # =================================================================
 # UTILIDADES
 # =================================================================
+def _chunks(lst, n):
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
 def cargar_json(ruta, default):
     try:
         with open(ruta, "r", encoding="utf-8") as f:
@@ -376,12 +380,6 @@ def fmt_ts(seg):
     seg = int(seg)
     h, m, s = seg // 3600, seg % 3600 // 60, seg % 60
     return f"{h}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
-
-# ═══════════════════════════ v1.7 ═══════════════════════════
-def _chunks(lst, n):
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
-# ═══════════════════════════════════════════════════════════════
 
 # =================================================================
 # HISTORIAL
@@ -476,23 +474,16 @@ def actualizar_rendimiento(youtube, estado):
     except Exception:
         pass
 
-# ═══════════════════════════ v1.7 ═══════════════════════════
+# ═══════════════════════════ v1.7 BOLA DE NIEVE ═══════════════════════════
 def detectar_outliers(youtube, keyword, max_subs=OUTLIER_MAX_SUBS,
                       min_ratio=OUTLIER_MIN_RATIO, days=180,
                       cache_h=OUTLIER_CACHE_HORAS):
-    """
-    Outlier = canal chico con video muy visto.
-    ratio = views / subscriberCount. Si subs < 50k y ratio > 5,
-    YouTube empujó ese video a gente que NO era suscriptor.
-    Señal: hay gente esperando este tema.
-    """
     if youtube is None:
         return []
     cache = cargar_json(OUTLIERS_FILE, {})
     key = f"{keyword}|{max_subs}|{min_ratio}"
     if key in cache and (time.time() - cache[key].get("ts", 0)) < cache_h * 3600:
         return cache[key]["items"]
-
     try:
         desde = (datetime.now(timezone.utc) - timedelta(days=days)
                  ).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -506,7 +497,6 @@ def detectar_outliers(youtube, keyword, max_subs=OUTLIER_MAX_SUBS,
             cache[key] = {"ts": time.time(), "items": []}
             guardar_json(OUTLIERS_FILE, cache)
             return []
-
         v_resp = youtube.videos().list(part="statistics,snippet",
                                         id=",".join(vids)).execute()
         ch_ids, rows = set(), []
@@ -519,7 +509,6 @@ def detectar_outliers(youtube, keyword, max_subs=OUTLIER_MAX_SUBS,
                 "published_at": v["snippet"]["publishedAt"],
                 "views": int(v["statistics"].get("viewCount", 0)),
             })
-
         subs_map = {}
         for chunk in _chunks(list(ch_ids), 50):
             c = youtube.channels().list(part="statistics",
@@ -527,7 +516,6 @@ def detectar_outliers(youtube, keyword, max_subs=OUTLIER_MAX_SUBS,
             for item in c.get("items", []):
                 subs_map[item["id"]] = int(
                     item["statistics"].get("subscriberCount", 0))
-
         out = []
         for r in rows:
             subs = subs_map.get(r["channel_id"], 0)
@@ -551,7 +539,6 @@ def detectar_outliers(youtube, keyword, max_subs=OUTLIER_MAX_SUBS,
         return []
 
 def cruzar_temas(tema_original, outlier):
-    """Cruza el tema del pool con un outlier real de YouTube."""
     prompt = f"""Eres estratega de YouTube. Cruza estos dos temas para crear
 UN video nuevo que herede la demanda de ambos.
 
@@ -583,10 +570,6 @@ Responde SOLO JSON:
     return None
 
 def elegir_formato_perfil(estado):
-    """
-    v1.7: Si hay perfil bloqueado y el último video cumplió el umbral,
-    repetirlo. Si no, rotar y preparar para bloquear.
-    """
     lock = estado.get("perfil_lock")
     if lock:
         ult = next((v for v in reversed(estado["videos"])
@@ -607,7 +590,6 @@ def elegir_formato_perfil(estado):
     return f, p, False
 
 def bloquear_perfil(estado, formato, perfil, video_id):
-    """Llamar solo tras subir el primer video que cumple umbral."""
     estado["perfil_lock"] = {
         "formato_nombre": formato["nombre"],
         "perfil": perfil,
@@ -636,7 +618,6 @@ Responde SOLO JSON:
         return None
 
 def validar_misma_audiencia(avatar, plan_nuevo, tema_nuevo):
-    """Pregunta binaria del video: ¿la misma persona lo vería?"""
     if not avatar:
         return True, "sin avatar"
     tits = plan_nuevo.get("titulos") or [""]
@@ -664,7 +645,6 @@ Responde SOLO JSON:
         return True, "error validando"
 
 def detectar_uniforme_nicho(youtube, keyword, top_n=12, cache_d=7):
-    """Analiza títulos top del nicho y sugiere contra-patrones."""
     cache = cargar_json(UNIFORME_FILE, {})
     if keyword in cache and (time.time() - cache[keyword].get("ts", 0)) < cache_d * 86400:
         return cache[keyword]["patron"]
@@ -703,18 +683,15 @@ Responde SOLO JSON:
         return None
 
 def elegir_tema(estado, youtube):
-    """v1.7: elige tema puntuando por outliers reales + cruza con uno de ellos."""
     recientes = estado["temas_recientes"][-6:]
     pool = [t for t in TEMAS if t["tema"] not in recientes] or TEMAS[:]
     candidatos = random.sample(pool, min(5, len(pool)))
-
     outliers_map = {}
     scores = {}
     for t in candidatos:
         o = detectar_outliers(youtube, t["seed"])
         outliers_map[t["tema"]] = o
         scores[t["tema"]] = sum(x["ratio"] for x in o)
-
     acum = {}
     for v in estado["videos"]:
         if "vistas" in v:
@@ -730,7 +707,6 @@ def elegir_tema(estado, youtube):
 
     elegido = max(candidatos, key=final_score)
     print(f"🎯 Tema: {elegido['tema']} | outliers={len(outliers_map.get(elegido['tema'], []))}")
-
     outs = outliers_map.get(elegido["tema"], [])
     if outs:
         refinado = cruzar_temas(elegido, outs[0])
@@ -745,10 +721,10 @@ def elegir_tema(estado, youtube):
                 "dato_weird_hint": refinado.get("dato_weird_sugerido", ""),
             }
     return elegido
-# ═══════════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════════════════════
 
 # =================================================================
-# TÍTULOS Y MINIATURAS (SEO ÉLITE v1.6)
+# TÍTULOS Y MINIATURAS (SEO ÉLITE)
 # =================================================================
 GANCHOS = [
     "nunca", "nadie", "jamás", "nadie te", "nadie sabe", "nadie te dijo",
@@ -977,7 +953,6 @@ def generar_puntos(plan, tema, contexto):
                      f"si encaja. AL FINAL DE ESTE PUNTO, usa un OPEN LOOP: deja una frase "
                      f"intrigante que obligue a ver el siguiente punto.")
 
-        # ═══════════════════════════ v1.7 ═══════════════════════════
         prompt = f"""Escribe el PUNTO {i+1} de {len(puntos)} de un documental científico "weird".
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FORMATO: {nombre_fmt.upper()}
@@ -1010,7 +985,6 @@ REGLAS:
 - Los 5 puntos deben ser DIFERENTES entre sí.
 
 Devuelve SOLO el texto del punto."""
-        # ═══════════════════════════════════════════════════════════════
         texto = None
         for intento in range(3):
             t = llm(prompt, temperature=0.85, max_tokens=1000)
@@ -1071,7 +1045,7 @@ def crear_segmentos(puntos_txt):
     return segs
 
 # =================================================================
-# VOZ
+# VOZ (v1.8: con fallback gTTS)
 # =================================================================
 def duracion_audio(ruta):
     a = AudioFileClip(ruta)
@@ -1100,6 +1074,18 @@ def generar_audio(texto, nombre, etapa):
             except Exception as e:
                 print(f"❌ TTS {voz}: {e}")
                 time.sleep(2 * (intento + 1))
+
+    # ═══ v1.8: fallback gTTS si todas las voces Edge fallan ═══
+    try:
+        from gtts import gTTS
+        print(f"   🔄 Edge TTS falló. Usando gTTS para '{nombre}'...")
+        gTTS(text=limpio, lang="es", slow=False).save(ruta)
+        if os.path.exists(ruta) and os.path.getsize(ruta) > 500:
+            print(f"   ✅ gTTS OK para '{nombre}'")
+            return ruta
+    except Exception as e:
+        print(f"   ❌ gTTS también falló: {e}")
+
     return None
 
 def sintetizar(segs):
@@ -1267,7 +1253,7 @@ def imagen_fallback(idx):
     return ruta
 
 # =================================================================
-# PLANIFICACIÓN VISUAL (DOS PROMPTS POR SEGMENTO)
+# PLANIFICACIÓN VISUAL
 # =================================================================
 def planificar_visuales(segs, tema):
     out = [None] * len(segs)
@@ -1280,14 +1266,14 @@ Para CADA fragmento numerado, devuelve DOS prompts EN INGLÉS:
 
 1. "flux": Prompt de 5-8 palabras para generar una imagen ESTILIZADA con IA (Flux).
    - Estilo: cinematográfico, abstracto, oscuro-elegante, científico
-   - PERMITIDO: silueta humana de espaldas, manos tocando objetos, ojos close-up, textura de piel macro, un solo órgano o parte del cuerpo en close-up
+   - PERMITIDO: silueta humana de espaldas, manos tocando objetos, ojos close-up
    - PROHIBIDO: rostros completos, cuerpos desnudos, anatomía realista detallada
-   - Ejemplo: "silhouette person looking at dying sun", "hands shivering cold macro dark", "abstract brain neurons glowing blue"
+   - Ejemplo: "silhouette person looking at dying sun", "abstract brain neurons glowing blue"
 
 2. "pexels": Prompt de 3-5 palabras para buscar FOTO REAL en Pexels.
    - DEBE ser concreto y con personas/objetos reales
-   - DEBE reflejar el TEMA del fragmento (no solo el ambiente)
-   - Ejemplo: "man shivering cold dark", "person looking sunset", "human hands touching ice"
+   - DEBE reflejar el TEMA del fragmento
+   - Ejemplo: "man shivering cold dark", "person looking sunset"
 
 TEMA GLOBAL: {tema['tema']}
 ÁNGULO: {tema['angulo']}
@@ -1298,7 +1284,6 @@ Fragmentos:
 Responde SOLO JSON con esta estructura:
 {{
   "consultas": [
-    {{"flux": "...", "pexels": "..."}},
     {{"flux": "...", "pexels": "..."}}
   ]
 }}
@@ -1439,7 +1424,7 @@ def renderizar(escenas, total, audio, size, salida, sufijo=""):
     return salida
 
 # =================================================================
-# MINIATURAS ÉLITE v1.6 + IDENTIDAD v1.7
+# MINIATURAS ÉLITE
 # =================================================================
 def obtener_fuente(size):
     os.makedirs("fonts", exist_ok=True)
@@ -1554,13 +1539,11 @@ def elegir_estilo_miniatura():
     ]
     return random.choice(estilos)
 
-# ═══════════════════════════ v1.7 ═══════════════════════════
 ESTILOS_IDENTIDAD = [
     {"nombre": "curiosidad_cian", "color_texto": (0, 255, 255),
      "color_acento": (0, 255, 180), "stroke": (0, 0, 0),
      "elemento": "circulo", "pos_texto": "derecha"},
 ]
-# ═══════════════════════════════════════════════════════════════
 
 def dividir_lineas(palabras):
     if len(palabras) <= 2:
@@ -1575,18 +1558,11 @@ def dividir_lineas(palabras):
 
 def crear_miniatura_v16(img_rostro_path, texto, salida, estilo=None, forzar_estilo=None):
     TW, TH = 1280, 720
-    # ═══════════════════════════ v1.7 ═══════════════════════════
     if forzar_estilo:
-        match = next((s for s in ESTILOS_IDENTIDAD + elegir_estilo_miniatura.__wrapped__()
-                      if isinstance(s, dict) and s.get("nombre") == forzar_estilo), None) \
-                if hasattr(elegir_estilo_miniatura, "__wrapped__") else \
-                next((s for s in ESTILOS_IDENTIDAD if s["nombre"] == forzar_estilo), None)
-        if not match:
-            match = next((s for s in ESTILOS_IDENTIDAD if s["nombre"] == forzar_estilo), None)
+        match = next((s for s in ESTILOS_IDENTIDAD if s["nombre"] == forzar_estilo), None)
         if match:
             estilo = match
             print(f"   🎨 Estilo identidad forzado: {estilo['nombre']}")
-    # ═══════════════════════════════════════════════════════════════
     estilo = estilo or elegir_estilo_miniatura()
 
     try:
@@ -1690,7 +1666,7 @@ def crear_miniatura_v16(img_rostro_path, texto, salida, estilo=None, forzar_esti
             if os.path.getsize(salida) < 1_900_000:
                 break
 
-        print(f"✅ Miniatura v1.7 [{estilo['nombre']}]: '{' / '.join(lineas)}' ({size_final}px)")
+        print(f"✅ Miniatura v1.8 [{estilo['nombre']}]: '{' / '.join(lineas)}' ({size_final}px)")
         return True
     except Exception as e:
         print(f"❌ Error miniatura: {e}")
@@ -1707,7 +1683,7 @@ def crear_miniatura_v16(img_rostro_path, texto, salida, estilo=None, forzar_esti
             return False
 
 # =================================================================
-# SEO ELITE
+# SEO ELITE (v1.8 con sanitización)
 # =================================================================
 def _ascii_tag_yt(t):
     nfd = unicodedata.normalize('NFD', str(t))
@@ -1715,52 +1691,73 @@ def _ascii_tag_yt(t):
     limpio = re.sub(r'[^a-z0-9 ]', '', sin_acentos.lower())
     return re.sub(r'\s+', ' ', limpio).strip()
 
+# ═══════════════════════════ v1.8: SANITIZAR TAGS ═══════════════════════════
+def sanitizar_tags_yt(tags, max_tags=18, max_chars_tag=25, max_words=3):
+    """
+    Última línea de defensa: devuelve tags que YouTube NO puede rechazar.
+    Usado en construir_tags() Y en subir_video() como retry de invalidTags.
+    """
+    limpios, vistos = [], set()
+    for t in tags or []:
+        if not isinstance(t, str):
+            continue
+        # Normalizar a ASCII
+        nfd = unicodedata.normalize('NFD', t)
+        t = ''.join(c for c in nfd if unicodedata.category(c) != 'Mn')
+        t = re.sub(r'[^a-z0-9 ]', '', t.lower())
+        t = re.sub(r'\s+', ' ', t).strip()
+        if not t or t in vistos:
+            continue
+        # Truncar si es largo
+        if len(t) > max_chars_tag:
+            t = " ".join(t.split()[:max_words])
+        # Filtros duros
+        if len(t.split()) > max_words:
+            continue
+        if len(t) < 3 or len(t) > max_chars_tag:
+            continue
+        # Rechazar tags con 3+ dígitos seguidos
+        if re.search(r"\d{3,}", t):
+            continue
+        # Rechazar verbos de opinión al inicio
+        if re.match(r'^(es|son|fue|eran|era)\s+(malo|bueno|peligroso|recomendable)', t):
+            continue
+        vistos.add(t)
+        limpios.append(t)
+        if len(limpios) >= max_tags:
+            break
+    return limpios
+# ═══════════════════════════════════════════════════════════════════════════
+
 def construir_tags(plan, tema, sugerencias):
+    """v1.8: sanitización AGRESIVA para evitar invalidTags."""
     nombre_tema = _ascii_tag_yt(tema["tema"].replace("_", " "))
+
     tags_ia = plan.get("tags", [])
     if isinstance(tags_ia, str):
         tags_ia = [x.strip() for x in tags_ia.split(",")]
-    bloque_a = list(tags_ia)[:8]
+
+    bloque_a = list(tags_ia)[:5]
     bloque_b = [
-        f"que pasaria si {nombre_tema}",
+        nombre_tema,
+        f"que pasa si {nombre_tema}",
         f"por que {nombre_tema}",
-        f"lo que la ciencia oculta de {nombre_tema}",
-        f"tu cuerpo y {nombre_tema}",
-        f"tu cerebro y {nombre_tema}",
-        f"el secreto de {nombre_tema}",
-        f"datos curiosos de {nombre_tema}",
-    ]
-    bloque_c = list(sugerencias)[:5]
-    bloque_d = [
         f"ciencia {nombre_tema}",
-        f"documental de {nombre_tema}",
-        f"explicacion cientifica de {nombre_tema}",
-        f"divulgacion cientifica {nombre_tema}",
-        f"misterios de {nombre_tema}",
-    ] + list(tema["keywords"])[:5]
+    ]
+    bloque_c = list(sugerencias)[:3]
+    bloque_d = [
+        f"documental {nombre_tema}",
+        f"explicacion {nombre_tema}",
+    ] + list(tema["keywords"])[:3]
     bloque_e = [
         "ciencia", "divulgacion cientifica", "datos curiosos",
-        "curiosidades cientificas", "ciencia weird", "asombro cientifico",
-        "documental cientifico", "ciencia para todos", "misterios de la ciencia",
-        "cuerpo humano", "universo", "neurociencia",
+        "curiosidades cientificas", "ciencia weird", "cuerpo humano",
+        "universo", "neurociencia", "documental cientifico",
     ]
-    todos, vistos = [], set()
-    for raw in bloque_a + bloque_b + bloque_c + bloque_d + bloque_e:
-        tag = _ascii_tag_yt(raw)
-        if not tag or len(tag) < 2 or len(tag) > 40 or tag in vistos:
-            continue
-        if any(x in tag for x in ("100 real", "veridico", "caso real",
-                                    "cura", "remedio", "milagro", "garantizado")):
-            continue
-        vistos.add(tag)
-        todos.append(tag)
-    resultado, total_chars = [], 0
-    for tag in todos:
-        costo = len(tag) + 1
-        if total_chars + costo > 490 or len(resultado) >= 25:
-            break
-        resultado.append(tag)
-        total_chars += costo
+
+    todos = bloque_a + bloque_b + bloque_c + bloque_d + bloque_e
+    resultado = sanitizar_tags_yt(todos, max_tags=18, max_chars_tag=25, max_words=3)
+
     print(f"🏷️  Tags ({len(resultado)}): {', '.join(resultado[:8])}...")
     return resultado
 
@@ -1836,7 +1833,7 @@ def generar_srt(segs, ruta):
     return ruta
 
 # =================================================================
-# PUBLICACIÓN
+# PUBLICACIÓN (v1.8 con retry para invalidTags)
 # =================================================================
 def deberia_publicar(estado):
     ult = estado.get("ultima_publicacion")
@@ -1888,10 +1885,15 @@ def utc_iso(dt):
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 def subir_video(youtube, ruta, titulo, descripcion, tags, publish_at=None):
+    """v1.8: pre-sanitiza tags Y reintenta automáticamente si invalidTags."""
     status = {"privacyStatus": "public", "selfDeclaredMadeForKids": False,
               "containsSyntheticMedia": True}
     if publish_at:
         status.update({"privacyStatus": "private", "publishAt": publish_at})
+
+    # Pre-sanitización: los tags ya vienen limpios, pero doble red de seguridad
+    tags = sanitizar_tags_yt(tags, max_tags=15, max_chars_tag=22, max_words=2)
+
     body = {"snippet": {"title": titulo[:100], "description": descripcion[:5000],
                         "tags": tags, "categoryId": CATEGORY_ID,
                         "defaultLanguage": "es", "defaultAudioLanguage": "es"},
@@ -1906,6 +1908,15 @@ def subir_video(youtube, ruta, titulo, descripcion, tags, publish_at=None):
             if st:
                 print(f"   ⬆️ {int(st.progress() * 100)}%")
         except (HttpError, ssl.SSLEOFError, ConnectionError, socket.timeout, OSError) as e:
+            # ═══ v1.8: retry específico para invalidTags ═══
+            if isinstance(e, HttpError) and e.resp.status == 400 and "invalidTags" in str(e):
+                print(f"⚠️ YouTube rechazó los tags. Reintentando con tags ultra-conservadores...")
+                tags_safe = sanitizar_tags_yt(tags, max_tags=10, max_chars_tag=20, max_words=2)
+                print(f"   🏷️ Tags seguros ({len(tags_safe)}): {tags_safe}")
+                body["snippet"]["tags"] = tags_safe
+                req = youtube.videos().insert(part="snippet,status", body=body, media_body=media)
+                continue
+
             es_reintento = (isinstance(e, HttpError) and e.resp.status in (429, 500, 502, 503, 504))
             es_reintento = es_reintento or isinstance(e, (ssl.SSLEOFError, ConnectionError, socket.timeout, OSError))
             if es_reintento and reintentos < 8:
@@ -2136,7 +2147,7 @@ def verificar_envs():
         print(f"❌ Faltan variables: {', '.join(faltan)}")
         sys.exit(1)
     if not PEXELS_API_KEY:
-        print("⚠️ PEXELS_API_KEY no configurada — miniaturas caerán a Flux abstracto")
+        print("⚠️ PEXELS_API_KEY no configurada")
     else:
         try:
             r = requests.get(
@@ -2185,25 +2196,20 @@ def main():
         sys.exit(0)
 
     print("=" * 70)
-    print("🧬 CHISPAS INQUIETAS - BOT v1.7 BOLA DE NIEVE")
+    print("🧬 CHISPAS INQUIETAS - BOT v1.8")
     print(f"📅 {datetime.now(TZ):%Y-%m-%d %H:%M} | 🎤 {VOZ_CANAL['voz']}")
     print(f"📤 1 Video Largo + 2 Shorts | 🎨 Flux SEG_ESCENA={SEG_ESCENA}s")
-    print(f"🎯 v1.7: OUTLIERS + LOCK PERFIL + AVATAR + IDENTIDAD VISUAL")
+    print(f"🎯 v1.8: FIX invalidTags + fallback gTTS")
     print("=" * 70)
 
-    # ═══════════════════════════ v1.7 ═══════════════════════════
     actualizar_rendimiento(youtube, estado)
-
-    # 1) Elegir tema (con outliers)
     tema = elegir_tema(estado, youtube)
     contexto = random.choice(tema["contextos"])
 
-    # 2) Formato/perfil con lock (bola de nieve)
     formato, perfil, lock_activo = elegir_formato_perfil(estado)
     print(f"🎭 Formato: {formato['nombre']} | Narrador: {perfil}"
           + (" [LOCKED]" if lock_activo else ""))
 
-    # 3) Uniforme del nicho (informativo)
     uniforme = detectar_uniforme_nicho(youtube, tema["keywords"][0])
     if uniforme:
         contra = uniforme.get("contra_patrones", [])
@@ -2218,7 +2224,6 @@ def main():
     fondo = seleccionar_fondo(estado)
     titulos_previos = cargar_json(TITULOS_FILE, {"titulos": []})["titulos"][-20:]
 
-    # 4) Loop de plan con validación de audiencia
     avatar_actual = estado.get("avatar_audiencia")
     plan = titulo = None
     for intento in range(4):
@@ -2228,13 +2233,11 @@ def main():
             if plan.get("palabras_clave") and tema_ya_usado(
                     " ".join(map(str, plan["palabras_clave"]))):
                 raise ValueError("tema repetido")
-
             ok_aud, motivo = validar_misma_audiencia(avatar_actual, plan, tema)
             if not ok_aud:
                 print(f"   ⚠️ Plan rechazado por audiencia: {motivo}")
                 plan = None
                 continue
-
             titulo = elegir_titulo(plan["titulos"], plan.get("dato_weird", ""))
             if not titulo:
                 raise ValueError("sin título válido")
@@ -2249,7 +2252,6 @@ def main():
     if not plan:
         print("❌ No se pudo generar plan válido.")
         sys.exit(1)
-    # ═══════════════════════════════════════════════════════════════
 
     print(f"📌 Título: {titulo}")
     print(f"🎯 Dato weird: {plan.get('dato_weird', 'N/A')}")
@@ -2351,7 +2353,6 @@ def main():
     print(f"📝 Descripción (primeras 2 líneas):")
     print("   " + "\n   ".join(descripcion.split("\n")[:2]))
 
-    # ═══════════════════════════ v1.7: MINIATURA CON IDENTIDAD ═══════════════════════════
     print("🖼️  Buscando rostro emocional para miniatura...")
     portada = elegir_texto_portada(plan.get("palabras_portada"), titulo)
     print(f"   📝 Texto de portada: '{portada}'")
@@ -2395,38 +2396,18 @@ def main():
     miniatura = "miniatura.jpg" if miniatura_ok else None
     if not miniatura:
         print("   ⚠️ No se pudo generar miniatura. Se subirá sin miniatura.")
-    # ════════════════════════════════════════════════════════════════════════════════════
 
     escenas = construir_escenas(segs)
     audio, _ = mezclar_audio(segs, total, fondo)
     print("🎬 Renderizando video largo...")
     renderizar(escenas, total, audio, (W, H), "video_final.mp4", sufijo="_largo")
 
-    # ═══════════════════════════ v1.7: SLOTS Y SUBIDA ═══════════════════════════
     slot_largo = slot_short1 = slot_short2 = None
     if PROGRAMAR_PICO:
         slot_largo, slot_short1, slot_short2 = proximo_slot_batch()
         print(f"🕖 Video Largo: {slot_largo:%Y-%m-%d %H:%M} CDMX")
         print(f"📱 Short 1:    {slot_short1:%Y-%m-%d %H:%M} CDMX")
         print(f"📱 Short 2:    {slot_short2:%Y-%m-%d %H:%M} CDMX")
-        dias = {slot_largo.date(), slot_short1.date(), slot_short2.date()}
-        if len(dias) > 1:
-            print(f"⚠️ Slots en días distintos. Ajustando shorts al día del largo.")
-            if slot_short1.date() != slot_largo.date():
-                slot_short1 = slot_largo.replace(
-                    hour=HORA_SHORT_1, minute=0, second=0, microsecond=0
-                ) + timedelta(minutes=random.randint(-VARIACION_MINUTOS_SHORT_1,
-                                                      VARIACION_MINUTOS_SHORT_1) + 15)
-                if slot_short1 < datetime.now(TZ) + timedelta(minutes=15):
-                    slot_short1 = datetime.now(TZ) + timedelta(minutes=30)
-            if slot_short2.date() != slot_largo.date():
-                slot_short2 = slot_largo.replace(
-                    hour=HORA_SHORT_2, minute=0, second=0, microsecond=0
-                ) + timedelta(minutes=random.randint(-VARIACION_MINUTOS_SHORT_2,
-                                                      VARIACION_MINUTOS_SHORT_2) + 15)
-                if slot_short2 < datetime.now(TZ) + timedelta(minutes=15):
-                    slot_short2 = datetime.now(TZ) + timedelta(minutes=60)
-            print(f"🕖 Ajustado → Largo: {slot_largo:%H:%M} | S1: {slot_short1:%H:%M} | S2: {slot_short2:%H:%M}")
 
     print("📤 Subiendo video largo...")
     vid_largo = None
@@ -2490,7 +2471,6 @@ def main():
         else:
             print("⚠️ No se generaron shorts")
 
-    # v1.7: guardar avatar si es primera vez
     if not estado.get("avatar_audiencia"):
         avatar_nuevo = generar_avatar_audiencia(plan, tema)
         if avatar_nuevo:
@@ -2498,10 +2478,8 @@ def main():
             print(f"👤 Avatar guardado: {avatar_nuevo.get('edad','?')} / "
                   f"{avatar_nuevo.get('dolor','')[:60]}")
 
-    # v1.7: bloquear perfil si es primera vez con video exitoso
     if vid_largo and not estado.get("perfil_lock"):
         bloquear_perfil(estado, formato, perfil, vid_largo)
-    # ══════════════════════════════════════════════════════════════════════════
 
     estado["ultima_publicacion"] = datetime.now(TZ).isoformat()
     estado["temas_recientes"] = (estado.get("temas_recientes", []) + [tema["tema"]])[-20:]
