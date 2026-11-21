@@ -5,7 +5,8 @@
     "Forward Momentum.mp3",
     "Peak Momentum.mp3",
     "The Ascent.mp3",
-    "Binary Pulse.mp3"
+    "Binary Pulse.mp3",
+    "Forward Momentum.mp3"
   ],
   "videos": [
     {
@@ -88,21 +89,45 @@
       "tipo": "largo",
       "titulo": "¿Por qué algunas personas madrugan sin querer?",
       "tema": "adn_neandertal_rasgos",
-      "fecha": "2026-11-20T13:50:40.453930-06:00"
+      "fecha": "2026-11-20T13:50:40.453930-06:00",
+      "vistas": 0
     },
     {
       "id": "d6oxTlOTbfc",
       "tipo": "short",
       "titulo": "¿Despiertas a las 3 AM? La advertencia neandertal",
       "tema": "adn_neandertal_rasgos",
-      "fecha": "2026-11-20T13:52:24.852018-06:00"
+      "fecha": "2026-11-20T13:52:24.852018-06:00",
+      "vistas": 0
     },
     {
       "id": "GIAOm_Ggzcs",
       "tipo": "short",
       "titulo": "Madrugar es un regalo evolutivo, no una condena",
       "tema": "adn_neandertal_rasgos",
-      "fecha": "2026-11-20T13:54:03.530568-06:00"
+      "fecha": "2026-11-20T13:54:03.530568-06:00",
+      "vistas": 10
+    },
+    {
+      "id": "IlK_JLnYzlQ",
+      "tipo": "largo",
+      "titulo": "Si la Tierra deja de girar, NUNCA sueltes lo que amas (la ciencia lo explica)",
+      "tema": "tierra_deja_de_girar",
+      "fecha": "2026-11-21T12:53:33.814605-06:00"
+    },
+    {
+      "id": "CFQqWhI8k6k",
+      "tipo": "short",
+      "titulo": "Si la Tierra frena, esto te dispara a 1.670 km/h",
+      "tema": "tierra_deja_de_girar",
+      "fecha": "2026-11-21T12:55:01.306096-06:00"
+    },
+    {
+      "id": "MK2GgyEgTGo",
+      "tipo": "short",
+      "titulo": "La paradoja de frenar la Tierra: el rebote es peor",
+      "tema": "tierra_deja_de_girar",
+      "fecha": "2026-11-21T12:56:41.964494-06:00"
     }
   ],
   "temas_recientes": [
@@ -111,9 +136,10 @@
     "interocepcion_sexto_sentido",
     "tierra_deja_de_girar_efectos_cuerpo",
     "estornudo_aguantado_consecuencias",
-    "adn_neandertal_rasgos"
+    "adn_neandertal_rasgos",
+    "tierra_deja_de_girar"
   ],
-  "ultima_publicacion": "2026-11-20T13:54:03.531586-06:00",
+  "ultima_publicacion": "2026-11-21T12:56:41.965370-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
@@ -130,9 +156,9 @@
     "por_que_ve_esto": "Le atrae imaginar un escenario extremo y comprobar qué le pasaría a su propio cuerpo con una explicación científica sencilla y sorprendente."
   },
   "perfil_lock": {
-    "formato_nombre": "experimento_mental",
-    "perfil": "microbiólogo con experiencia en divulgación",
-    "video_id_ancla": "RrvR-z0UQMc",
-    "desde": "2026-11-20T13:54:03.530599-06:00"
+    "formato_nombre": "lista_explicativa_weird",
+    "perfil": "astrofísico divulgador especializado en cosmología",
+    "video_id_ancla": "IlK_JLnYzlQ",
+    "desde": "2026-11-21T12:56:41.964521-06:00"
   }
 }
