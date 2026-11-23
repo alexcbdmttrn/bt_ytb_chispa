@@ -7,7 +7,8 @@
     "The Ascent.mp3",
     "Binary Pulse.mp3",
     "Forward Momentum.mp3",
-    "Peak Momentum.mp3"
+    "Peak Momentum.mp3",
+    "The Ascent.mp3"
   ],
   "videos": [
     {
@@ -27,7 +28,7 @@
       "titulo": "Tu cuerpo a 1.670 km/h: la Tierra frena",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
       "fecha": "2026-11-16T16:06:36.309151-06:00",
-      "vistas": 20
+      "vistas": 21
     },
     {
       "id": "PwKfIG5q0DY",
@@ -99,7 +100,7 @@
       "titulo": "¿Despiertas a las 3 AM? La advertencia neandertal",
       "tema": "adn_neandertal_rasgos",
       "fecha": "2026-11-20T13:52:24.852018-06:00",
-      "vistas": 0
+      "vistas": 1
     },
     {
       "id": "GIAOm_Ggzcs",
@@ -123,7 +124,7 @@
       "titulo": "Si la Tierra frena, esto te dispara a 1.670 km/h",
       "tema": "tierra_deja_de_girar",
       "fecha": "2026-11-21T12:55:01.306096-06:00",
-      "vistas": 80
+      "vistas": 83
     },
     {
       "id": "MK2GgyEgTGo",
@@ -138,21 +139,45 @@
       "tipo": "largo",
       "titulo": "Por qué NUNCA debes mirar al este si la Tierra se detiene",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
-      "fecha": "2026-11-22T13:12:08.893083-06:00"
+      "fecha": "2026-11-22T13:12:08.893083-06:00",
+      "vistas": 0
     },
     {
       "id": "G1XcAKbTU5s",
       "tipo": "short",
       "titulo": "Si la Tierra frena, sales volando a 1.670 km/h",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
-      "fecha": "2026-11-22T13:13:58.470915-06:00"
+      "fecha": "2026-11-22T13:13:58.470915-06:00",
+      "vistas": 6
     },
     {
       "id": "Rp15cpMTSZk",
       "tipo": "short",
       "titulo": "Paradoja: si todo gira, no lo notas",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
-      "fecha": "2026-11-22T13:15:40.225236-06:00"
+      "fecha": "2026-11-22T13:15:40.225236-06:00",
+      "vistas": 5
+    },
+    {
+      "id": "7CKlcdrL07k",
+      "tipo": "largo",
+      "titulo": "5 cosas que tu cuerpo hace mientras la Tierra gira a 1.670 km/h",
+      "tema": "tierra_deja_de_girar_cuerpo_humano",
+      "fecha": "2026-11-23T17:31:15.118612-06:00"
+    },
+    {
+      "id": "D8Bmt408OmY",
+      "tipo": "short",
+      "titulo": "Si la Tierra frena, sales volando a 1.670 km/h",
+      "tema": "tierra_deja_de_girar_cuerpo_humano",
+      "fecha": "2026-11-23T17:33:11.093666-06:00"
+    },
+    {
+      "id": "pruUHfMAnkU",
+      "tipo": "short",
+      "titulo": "La paradoja del ecuador: te lanzas tú, no la Tierra",
+      "tema": "tierra_deja_de_girar_cuerpo_humano",
+      "fecha": "2026-11-23T17:34:44.451727-06:00"
     }
   ],
   "temas_recientes": [
@@ -163,9 +188,10 @@
     "estornudo_aguantado_consecuencias",
     "adn_neandertal_rasgos",
     "tierra_deja_de_girar",
+    "tierra_deja_de_girar_cuerpo_humano",
     "tierra_deja_de_girar_cuerpo_humano"
   ],
-  "ultima_publicacion": "2026-11-22T13:15:40.225915-06:00",
+  "ultima_publicacion": "2026-11-23T17:34:44.452426-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
@@ -182,9 +208,9 @@
     "por_que_ve_esto": "Le atrae imaginar un escenario extremo y comprobar qué le pasaría a su propio cuerpo con una explicación científica sencilla y sorprendente."
   },
   "perfil_lock": {
-    "formato_nombre": "lista_explicativa_weird",
-    "perfil": "microbiólogo con experiencia en divulgación",
-    "video_id_ancla": "AM5eneASmXM",
-    "desde": "2026-11-22T13:15:40.225264-06:00"
+    "formato_nombre": "que_pasaria_si",
+    "perfil": "físico teórico especializado en escenarios hipotéticos",
+    "video_id_ancla": "7CKlcdrL07k",
+    "desde": "2026-11-23T17:34:44.451757-06:00"
   }
 }
