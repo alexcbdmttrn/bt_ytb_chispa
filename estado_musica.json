@@ -1,6 +1,5 @@
 {
   "ultimos_fondos": [
-    "The Ascent.mp3",
     "Binary Pulse.mp3",
     "Forward Momentum.mp3",
     "Peak Momentum.mp3",
@@ -9,7 +8,8 @@
     "Forward Momentum.mp3",
     "Peak Momentum.mp3",
     "The Ascent.mp3",
-    "Binary Pulse.mp3"
+    "Binary Pulse.mp3",
+    "Forward Momentum.mp3"
   ],
   "videos": [
     {
@@ -69,7 +69,7 @@
       "titulo": "La paradoja del día eterno: ni día ni noche",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
       "fecha": "2026-11-18T14:15:54.505099-06:00",
-      "vistas": 4
+      "vistas": 5
     },
     {
       "id": "P5Z_OwQoJFg",
@@ -157,7 +157,7 @@
       "titulo": "Paradoja: si todo gira, no lo notas",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
       "fecha": "2026-11-22T13:15:40.225236-06:00",
-      "vistas": 6
+      "vistas": 7
     },
     {
       "id": "7CKlcdrL07k",
@@ -173,7 +173,7 @@
       "titulo": "Si la Tierra frena, sales volando a 1.670 km/h",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
       "fecha": "2026-11-23T17:33:11.093666-06:00",
-      "vistas": 17
+      "vistas": 31
     },
     {
       "id": "pruUHfMAnkU",
@@ -188,21 +188,45 @@
       "tipo": "largo",
       "titulo": "5 cosas que tu cuerpo haría si la Tierra dejara de girar",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
-      "fecha": "2026-11-24T16:19:21.768030-06:00"
+      "fecha": "2026-11-24T16:19:21.768030-06:00",
+      "vistas": 0
     },
     {
       "id": "9VJoQpt_m3A",
       "tipo": "short",
       "titulo": "¡A 1.670 km/h hacia el este si la Tierra frena!",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
-      "fecha": "2026-11-24T16:21:06.724784-06:00"
+      "fecha": "2026-11-24T16:21:06.724784-06:00",
+      "vistas": 2
     },
     {
       "id": "A1HRAu96qpo",
       "tipo": "short",
       "titulo": "Paradoja: quieto en el polo, volando en el ecuador",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
-      "fecha": "2026-11-24T16:22:23.242095-06:00"
+      "fecha": "2026-11-24T16:22:23.242095-06:00",
+      "vistas": 8
+    },
+    {
+      "id": "9XgxoIkLblo",
+      "tipo": "largo",
+      "titulo": "Lo que TU cuerpo hace cuando duermes: 90% no eres tú",
+      "tema": "parasitos_invisibles_cuerpo",
+      "fecha": "2026-11-25T15:16:46.881795-06:00"
+    },
+    {
+      "id": "5z9OO7Rbf0M",
+      "tipo": "short",
+      "titulo": "Alerta: tu cuerpo no es 100% tuyo",
+      "tema": "parasitos_invisibles_cuerpo",
+      "fecha": "2026-11-25T15:17:57.352591-06:00"
+    },
+    {
+      "id": "oH9ZkBLXWHY",
+      "tipo": "short",
+      "titulo": "La paradoja de tu identidad biológica",
+      "tema": "parasitos_invisibles_cuerpo",
+      "fecha": "2026-11-25T15:19:02.331604-06:00"
     }
   ],
   "temas_recientes": [
@@ -215,9 +239,10 @@
     "tierra_deja_de_girar",
     "tierra_deja_de_girar_cuerpo_humano",
     "tierra_deja_de_girar_cuerpo_humano",
-    "tierra_deja_de_girar_efectos_cuerpo"
+    "tierra_deja_de_girar_efectos_cuerpo",
+    "parasitos_invisibles_cuerpo"
   ],
-  "ultima_publicacion": "2026-11-24T16:22:23.242955-06:00",
+  "ultima_publicacion": "2026-11-25T15:19:02.332310-06:00",
   "publicaciones_hoy": 0,
   "avatar_audiencia": {
     "edad": "18-35",
@@ -234,9 +259,9 @@
     "por_que_ve_esto": "Le atrae imaginar un escenario extremo y comprobar qué le pasaría a su propio cuerpo con una explicación científica sencilla y sorprendente."
   },
   "perfil_lock": {
-    "formato_nombre": "que_pasaria_si",
-    "perfil": "neurocientífico especializado en percepción",
-    "video_id_ancla": "pmdBr7DOAaA",
-    "desde": "2026-11-24T16:22:23.242128-06:00"
+    "formato_nombre": "anatomia_del_asombro",
+    "perfil": "biólogo evolutivo especializado en comportamiento humano",
+    "video_id_ancla": "9XgxoIkLblo",
+    "desde": "2026-11-25T15:19:02.331639-06:00"
   }
 }
