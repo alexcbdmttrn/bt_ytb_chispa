@@ -173,7 +173,7 @@
       "titulo": "Si la Tierra frena, sales volando a 1.670 km/h",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
       "fecha": "2026-11-23T17:33:11.093666-06:00",
-      "vistas": 31
+      "vistas": 32
     },
     {
       "id": "pruUHfMAnkU",
@@ -181,7 +181,7 @@
       "titulo": "La paradoja del ecuador: te lanzas tú, no la Tierra",
       "tema": "tierra_deja_de_girar_cuerpo_humano",
       "fecha": "2026-11-23T17:34:44.451727-06:00",
-      "vistas": 0
+      "vistas": 1
     },
     {
       "id": "pmdBr7DOAaA",
@@ -205,28 +205,31 @@
       "titulo": "Paradoja: quieto en el polo, volando en el ecuador",
       "tema": "tierra_deja_de_girar_efectos_cuerpo",
       "fecha": "2026-11-24T16:22:23.242095-06:00",
-      "vistas": 8
+      "vistas": 9
     },
     {
       "id": "9XgxoIkLblo",
       "tipo": "largo",
       "titulo": "Lo que TU cuerpo hace cuando duermes: 90% no eres tú",
       "tema": "parasitos_invisibles_cuerpo",
-      "fecha": "2026-11-25T15:16:46.881795-06:00"
+      "fecha": "2026-11-25T15:16:46.881795-06:00",
+      "vistas": 0
     },
     {
       "id": "5z9OO7Rbf0M",
       "tipo": "short",
       "titulo": "Alerta: tu cuerpo no es 100% tuyo",
       "tema": "parasitos_invisibles_cuerpo",
-      "fecha": "2026-11-25T15:17:57.352591-06:00"
+      "fecha": "2026-11-25T15:17:57.352591-06:00",
+      "vistas": 0
     },
     {
       "id": "oH9ZkBLXWHY",
       "tipo": "short",
       "titulo": "La paradoja de tu identidad biológica",
       "tema": "parasitos_invisibles_cuerpo",
-      "fecha": "2026-11-25T15:19:02.331604-06:00"
+      "fecha": "2026-11-25T15:19:02.331604-06:00",
+      "vistas": 20
     }
   ],
   "temas_recientes": [
@@ -257,11 +260,5 @@
     "dolor": "curiosidad por escenarios apocalípticos y ganas de entender la física cotidiana de forma impactante",
     "nivel": "educativo",
     "por_que_ve_esto": "Le atrae imaginar un escenario extremo y comprobar qué le pasaría a su propio cuerpo con una explicación científica sencilla y sorprendente."
-  },
-  "perfil_lock": {
-    "formato_nombre": "anatomia_del_asombro",
-    "perfil": "biólogo evolutivo especializado en comportamiento humano",
-    "video_id_ancla": "9XgxoIkLblo",
-    "desde": "2026-11-25T15:19:02.331639-06:00"
   }
 }
